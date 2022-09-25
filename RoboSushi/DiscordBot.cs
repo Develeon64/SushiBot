@@ -91,6 +91,9 @@ public class DiscordBot {
 	}
 
 	private bool IsModerator (SocketGuildUser user) {
+		if (user.Id == this._guild.Owner.Id)
+			return true;
+
 		bool isModerator = false;
 
 		foreach (ulong adminRoleId in ConfigManager.Config.Discord.AdminRoles) {
