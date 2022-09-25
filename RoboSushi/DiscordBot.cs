@@ -47,8 +47,11 @@ public class DiscordBot {
 				await command.RespondWithModalAsync(new ModalBuilder("Thread wurde gelöscht.", "thread_deletion_modal").Build());
 			}
 			else {
-				await command.RespondAsync("You don't have the permission to close this Thread :(", null, false, true);
+				await command.RespondAsync("You don't have the permission to close this Thread :(", ephemeral: true);
 			}
+		}
+		else {
+			await command.RespondAsync("There is nothing to close here.", ephemeral: true);
 		}
 
 	}
