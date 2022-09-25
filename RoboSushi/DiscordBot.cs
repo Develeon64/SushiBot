@@ -1,5 +1,5 @@
-﻿using Discord;
-using Discord.Commands;
+﻿using Develeon64.RoboSushi.Util;
+using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -9,35 +9,20 @@ namespace Develeon64.RoboSushi.Discord;
 public class DiscordBot {
 	DiscordSocketClient _client;
 	SocketGuild _guild;
-	System.Timers.Timer _timer = new(100000);
 
-	bool isReady = false;
-
-	public DiscordBot (string token) {
-		this._timer.Elapsed += this.Timer_Elapsed;
-		this._timer.Start();
-
+	public DiscordBot () {
 		this._client = new(new() {
 			AlwaysDownloadUsers = true,
 			GatewayIntents = GatewayIntents.All,
 			LogLevel = LogSeverity.Info,
-			MaxWaitBetweenGuildAvailablesBeforeReady = 3000,
+			MaxWaitBetweenGuildAvailablesBeforeReady = ConfigManager.Config.Discord.ReadyWait,
 			TotalShards = 1,
 		});
 
-		this.Initialize(token);
+		this.Initialize();
 	}
 
-	private async void Timer_Elapsed (object? sender, System.Timers.ElapsedEventArgs e) {
-		if (this.isReady) {
-			foreach (SocketThreadChannel thread in this._client.Guilds.ToDictionary((SocketGuild guild) => { return guild.Id; })[1022939762337775616].ThreadChannels) {
-				if (thread.IsArchived)
-					await thread.DeleteAsync();
-			}
-		}
-	}
-
-	private async void Initialize (string token) {
+	private async void Initialize () {
 		this._client.Log += this.Client_Log;
 		this._client.Ready += this.Client_Ready;
 
@@ -45,19 +30,19 @@ public class DiscordBot {
 		this._client.ThreadUpdated += this.Client_ThreadUpdated;
 		this._client.SlashCommandExecuted += this.Client_SlashCommandExecuted;
 
-		await this._client.LoginAsync(TokenType.Bot, token);
+		await this._client.LoginAsync(TokenType.Bot, ConfigManager.Config.Discord.Bot.Token);
 		await this._client.StartAsync();
 	}
 
 	private async Task Client_ThreadUpdated (Cacheable<SocketThreadChannel, ulong> old, SocketThreadChannel thread) {
-		if (thread.ParentChannel.Id == 1022960981816643585 && thread.IsArchived)
+		if (thread.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel.Id && thread.IsArchived)
 			await thread.DeleteAsync();
 	}
 
 	private async Task Client_SlashCommandExecuted (SocketSlashCommand command) {
 		if (command.Channel.GetChannelType() == ChannelType.PublicThread) {
 			SocketThreadChannel thread = command.Channel as SocketThreadChannel;
-			if (thread?.ParentChannel.Id == 1022960981816643585 && (thread?.Owner.Id == command.User.Id || this.IsModerator(this._guild.GetUser(command.User.Id)))) {
+			if (thread?.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel.Id && (thread?.Owner.Id == command.User.Id || this.IsModerator(this._guild.GetUser(command.User.Id)))) {
 				await thread.DeleteAsync();
 				await command.RespondWithModalAsync(new ModalBuilder("Thread wurde gelöscht.", "thread_deletion_modal").Build());
 			}
@@ -69,7 +54,7 @@ public class DiscordBot {
 	}
 
 	private async Task Client_ThreadCreated (SocketThreadChannel thread) {
-		if (thread.ParentChannel.Id == 1022960981816643585) {
+		if (thread.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel.Id) {
 			await thread.JoinAsync();
 
 			JObject newThread = new() {
@@ -95,7 +80,7 @@ public class DiscordBot {
 	}
 
 	private async Task Client_Ready () {
-		this._guild = this._client.Guilds.ToDictionary((SocketGuild guild) => { return guild.Id; })[1022939762337775616];
+		this._guild = this._client.Guilds.ToDictionary((SocketGuild guild) => { return guild.Id; })[ConfigManager.Config.Discord.Guild.Id];
 		await this.Client_Log(new(LogSeverity.Info, "System", "Bot is ready!"));
 
 		SlashCommandBuilder command = new() {
@@ -103,11 +88,17 @@ public class DiscordBot {
 			Description = "Close the current Thread",
 		};
 		await this._guild.CreateApplicationCommandAsync(command.Build());
-		this.isReady = true;
 	}
 
 	private bool IsModerator (SocketGuildUser user) {
-		var roles = this._guild.Roles.ToDictionary((SocketRole role) => { return role.Id; });
-		return user.Roles.Contains(roles[1022990009390870588]) || user.Roles.Contains(roles[1022990072477392928]) || user.Roles.Contains(roles[1022990009390870588]);
+		bool isModerator = false;
+
+		foreach (ulong adminRoleId in ConfigManager.Config.Discord.AdminRoles) {
+			foreach (SocketRole userRole in user.Roles) {
+				if (userRole.Id == adminRoleId) isModerator = true;
+			}
+		}
+
+		return isModerator;
 	}
 }

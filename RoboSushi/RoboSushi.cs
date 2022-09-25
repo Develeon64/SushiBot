@@ -1,5 +1,5 @@
 ﻿using Develeon64.RoboSushi.Discord;
-using Newtonsoft.Json.Linq;
+using Develeon64.RoboSushi.Util;
 
 namespace Develeon64.RoboSushi;
 
@@ -9,9 +9,10 @@ public class RoboSushi {
 	}
 
 	public static async Task MainAsync (string[] args) {
-		JObject config = JObject.Parse(File.ReadAllText("token.json"));
+		ConfigManager.Initialize();
 
-		DiscordBot discord = new(config["token"].ToString());
+		DiscordBot discord = new();
+		
 		await Task.Delay(-1);
 	}
 }
