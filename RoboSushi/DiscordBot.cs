@@ -84,7 +84,7 @@ public class DiscordBot {
 				}
 				break;
 			}
-			default: {
+			case "version": {
 				HttpClient http = new();
 				EmbedBuilder builder = new() {
 					Color = new Color(63, 63, 63),
@@ -100,6 +100,10 @@ public class DiscordBot {
 				builder.AddField("__Code__", "My code can be found on GitHub under\n[Develeon64/SushiBot](https://github.com/Develeon64/SushiBot)", true);
 
 				await command.RespondAsync(embed: builder.Build());
+				break;
+			}
+			default: {
+				await command.RespondAsync("Unrecognized Command", ephemeral: true);
 				break;
 			}
 		}
