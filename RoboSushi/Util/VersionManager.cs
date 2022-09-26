@@ -3,14 +3,14 @@
 public static class VersionManager {
 	public static string Prefix { get; } = "v";
 	public static short MajorVersion { get; } = 1;
-	public static short MinorVersion { get; } = 1;
-	public static short PatchVersion { get; } = 3;
-	private static readonly string? preVersion = "version-command";
+	public static short MinorVersion { get; } = 2;
+	public static short PatchVersion { get; } = 0;
+	private static readonly string? preVersion = "";
 	private static readonly string? buildVersion = "5";
 
 	public static string PreVersion { get => preVersion != null ? $"-{preVersion}" : String.Empty; }
 	public static string BuildVersion { get => buildVersion != null ? $"+{buildVersion}" : String.Empty; }
 
 	public static string FullVersion { get => $"{Prefix}{MajorVersion}.{MinorVersion}.{PatchVersion}{PreVersion}{BuildVersion}"; }
-	public static string GitVersion { get => $"{Prefix}1.1.2"; }
+	public static string GitVersion { get => $"{Prefix}1.2.0"; }
 }
