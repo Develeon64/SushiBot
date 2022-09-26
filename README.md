@@ -1,2 +1,2 @@
-# RoboSushi
-([Discord](https://discord.com)-) Bot zur Automatisierung von Aufgaben auf dem offiziellen Discord-Server der [Twitch](https://www.twitch.tv)-Streamerin [SushiAims](https://www.twitch.tv/sushiaims).
+# Robo-Sushi
+Community-Bot zur Automatisierung von Aufgaben im Stream und auf dem offiziellen Discord-Server von [SushiAims](https://www.twitch.tv/sushiaims).
