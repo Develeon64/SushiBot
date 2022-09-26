@@ -47,7 +47,7 @@ public class DiscordBot {
 				break;
 			case 2:
 				await this._client.SetStatusAsync(UserStatus.AFK);
-				await this._client.SetGameAsync("Develeon64", "https://www.twitch.tv/develeon64", ActivityType.Listening);
+				await this._client.SetGameAsync("Develeon64", "", ActivityType.Listening);
 				break;
 			case 3:
 				await this._client.SetStatusAsync(UserStatus.DoNotDisturb);
