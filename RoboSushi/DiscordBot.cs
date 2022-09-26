@@ -88,14 +88,14 @@ public class DiscordBot {
 				HttpClient http = new();
 				EmbedBuilder builder = new() {
 					Color = new Color(63, 63, 63),
-					//Description = (await http.GetStringAsync("https://raw.githubusercontent.com/Develeon64/SushiBot/main/README.md")).Split("# Robo-Sushi")[1].Split('#')[0].Trim(),
-					//ImageUrl = (await http.GetStringAsync($"https://github.com/Develeon64/SushiBot/commit/{(await http.GetStringAsync($"https://github.com/Develeon64/SushiBot/releases/tag/{VersionManager.GitVersion}")).Split("/Develeon64/SushiBot/commit/")[1].Split('"')[0]}")).Split("og:image")[1].Split('"')[2],
+					Description = (await http.GetStringAsync("https://raw.githubusercontent.com/Develeon64/SushiBot/main/README.md")).Split("# Robo-Sushi")[1].Split('#')[0].Trim(),
+					ImageUrl = (await http.GetStringAsync($"https://github.com/Develeon64/SushiBot/commit/{(await http.GetStringAsync($"https://github.com/Develeon64/SushiBot/releases/tag/{VersionManager.GitVersion}")).Split("/Develeon64/SushiBot/commit/")[1].Split('"')[0]}")).Split("og:image")[1].Split('"')[2],
 					ThumbnailUrl = this._client.CurrentUser.GetDefaultAvatarUrl(),
 					Title = $"__Version: {VersionManager.FullVersion}__",
 				};
 				builder.WithAuthor(this._client.CurrentUser);
 				builder.WithFooter("Develeon64", "https://cdn.discordapp.com/attachments/344276509567090689/975281528173121606/Chrishi_Blurple-Dark.png");
-				//builder.AddField("__Changelog__", await http.GetStringAsync("https://github.com/Develeon64/SushiBot/blob/main/Var/Changelog.txt"), false);
+				builder.AddField("__Changelog__", await http.GetStringAsync("https://github.com/Develeon64/SushiBot/blob/main/Var/Changelog.txt"), false);
 				builder.AddField("__Author__", "I'm being developed by\n<@298215920709664768> (Develeon#1010)\nGitHub: [Develeon64](https://github.com/Develeon64)", true);
 				builder.AddField("__Code__", "My code can be found on GitHub under\n[Develeon64/SushiBot](https://github.com/Develeon64/SushiBot)", true);
 
