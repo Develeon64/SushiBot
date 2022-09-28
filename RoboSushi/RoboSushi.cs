@@ -4,9 +4,7 @@ using Develeon64.RoboSushi.Util;
 namespace Develeon64.RoboSushi;
 
 public class RoboSushi {
-	public static void Main (string[] args) {
-		RoboSushi.MainAsync(args).GetAwaiter().GetResult();
-	}
+	public static void Main (string[] args) { RoboSushi.MainAsync(args).GetAwaiter().GetResult(); }
 
 	public static async Task MainAsync (string[] args) {
 		ConfigManager.Initialize();
