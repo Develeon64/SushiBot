@@ -10,6 +10,7 @@ public class RoboSushi {
 		ConfigManager.Initialize();
 
 		DiscordBot discord = new();
+		TwitchBot twitch = new();
 		
 		await Task.Delay(-1);
 	}
