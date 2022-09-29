@@ -42,21 +42,10 @@ public partial class TwitchBot {
 
 		this._pubsub.OnStreamUp += this.PubSub_StreamUp;
 		this._pubsub.OnStreamDown += this.PubSub_StreamDown;
-
-		this._pubsub.OnBan += this.PubSub_Ban;
-		//this._pubsub.OnUnban += this.PubSub_Unban;
 	}
 
 
-	private void Client_MessageReceived (object? sender, OnMessageReceivedArgs e) {
-		Console.WriteLine("New Message from " + e.ChatMessage.DisplayName + "\n" + e.ChatMessage.Message);
-	}
-
-	private void Client_MessageSent (object? sender, OnMessageSentArgs e) {
-		Console.WriteLine("New Message from " + e.SentMessage.DisplayName + "\n" + e.SentMessage.Message);
-	}
-
-	private void Client_JoinedChannel (object? sender, OnJoinedChannelArgs e) {
+	private async void Client_JoinedChannel (object? sender, OnJoinedChannelArgs e) {
 		Console.WriteLine("Joined channel " + e.Channel);
 	}
 
@@ -89,17 +78,5 @@ public partial class TwitchBot {
 
 	private void PubSub_ListenResponse (object? sender, OnListenResponseArgs e) {
 		Console.WriteLine($"Listen-Response: {e.Topic} ({e.Successful}): {e.Response.Error}");
-	}
-
-	private void PubSub_StreamUp (object? sender, OnStreamUpArgs e) {
-		Console.WriteLine(e.ChannelId + " went live!");
-	}
-
-	private void PubSub_StreamDown (object? sender, OnStreamDownArgs e) {
-		Console.WriteLine(e.ChannelId + " is off!");
-	}
-
-	private void PubSub_Ban (object? sender, OnBanArgs e) {
-		Console.WriteLine($"{e.BannedBy} banned {e.BannedUser} for \"{e.BanReason}\"");
 	}
 }

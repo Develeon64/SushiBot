@@ -1,6 +1,7 @@
 ﻿using Develeon64.RoboSushi.Util;
 using Discord;
 using Discord.WebSocket;
+using Discord.Webhook;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -153,6 +154,43 @@ public class DiscordBot {
 	private async Task Client_ThreadUpdated (Cacheable<SocketThreadChannel, ulong> old, SocketThreadChannel thread) {
 		if (thread.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel.Id && thread.IsArchived)
 			await thread.DeleteAsync();
+	}
+
+	public async Task SendLiveNotification (string username, string game, string title, DateTime started, int viewerCount, string language, bool mature, string type, string streamUrl, string thumbnailUrl, string iconUrl) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
+			Description = $"**{this.Escape(username)}** is now on Twitch for *{viewerCount} viewers*!",
+			ImageUrl = streamUrl,
+			ThumbnailUrl = thumbnailUrl,
+			Timestamp = started,
+			Title = this.Escape(title),
+			Url = $"https://www.twitch.tv/{username}",
+		};
+		embed.WithColorGreen();
+		embed.AddField("__**Category**__", game, true);
+		embed.AddField("__**Type**__", type, true);
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync("@everyone", embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+	}
+
+	public async Task SendOffNotification (string username, DateTime ended, string streamUrl, string iconUrl) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
+			Description = $"**{this.Escape(username)}** is now *offline* again.",
+			ImageUrl = streamUrl,
+			Timestamp = ended,
+			Title = "",
+			Url = $"https://www.twitch.tv/{username}",
+		};
+		embed.WithColorPurple();
+		//embed.AddField("__**Category**__", game, true);
+		//embed.AddField("__**Type**__", type, true);
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+	}
+
+	private string Escape (string text) {
+		return text.Replace("<", "\\<").Replace("*", "\\*").Replace("_", "\\_").Replace("`", "\\`").Replace(":", "\\:");
 	}
 
 	private bool IsModerator (SocketGuildUser user) {
