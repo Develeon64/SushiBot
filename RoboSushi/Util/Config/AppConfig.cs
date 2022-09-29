@@ -2,5 +2,6 @@
 
 public struct AppConfig {
 	public DiscordConfig Discord { get; set; }
+	public TwitchConfig Twitch { get; set; }
 	public LogConfig Log { get; set; }
 }

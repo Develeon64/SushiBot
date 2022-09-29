@@ -6,7 +6,9 @@ public struct DiscordConfig {
 	public BotConfig Bot { get; set; }
 	public GuildConfig Guild { get; set; }
 	public bool SyncCommands { get; set; }
-	public MentalChannelConfig MentalChannel { get; set; }
+	public ChannelConfig MentalChannel { get; set; }
+	public ChannelConfig NotifyChannel { get; set; }
+	public ChannelConfig ModChannel { get; set; }
 	public ulong[] AdminRoles { get; set; }
 
 	public int ReadyWait {
