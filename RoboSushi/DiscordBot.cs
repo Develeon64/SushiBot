@@ -189,8 +189,99 @@ public class DiscordBot {
 		await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
 	}
 
+	public async Task SendBanNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon, string? reason = null) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = bannerName, IconUrl = bannerIcon },
+			ThumbnailUrl = userIcon,
+			Title = $"{userName} was **BANNED**!",
+			Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}",
+		};
+		if (reason != null)
+			embed.WithDescription(this.Escape(reason));
+		embed.WithColorPink();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+	}
+
+	public async Task SendUnbanNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = bannerName, IconUrl = bannerIcon },
+			ThumbnailUrl = userIcon,
+			Title = $"{userName} was **UNBANNED**!",
+			Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}",
+		};
+		embed.WithColorLime();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);	}
+
+	public async Task SendTimeoutNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon, TimeSpan duration, string? reason = null) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = bannerName, IconUrl = bannerIcon },
+			ThumbnailUrl = userIcon,
+			Title = $"{userName} was **TIMEDOUT**!",
+			Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}",
+		};
+		if (reason != null)
+			embed.WithDescription(this.Escape(reason));
+		embed.AddField("__Duration__", $"{duration.TotalSeconds} Seconds\n{this.ConvertTimeoutDuration(duration)}\n{this.ConvertTimeoutTime(duration)}");
+		embed.WithColorYellow();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+	}
+
+	public async Task SendUntimeoutNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = bannerName, IconUrl = bannerIcon },
+			ThumbnailUrl = userIcon,
+			Title = $"{userName} was **UNTIMEOUTED**!",
+			Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}",
+		};
+		embed.WithColorLime();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+	}
+
 	private string Escape (string text) {
 		return text.Replace("<", "\\<").Replace("*", "\\*").Replace("_", "\\_").Replace("`", "\\`").Replace(":", "\\:");
+	}
+
+	private string ConvertTimeoutDuration (TimeSpan duration) {
+		string value = String.Empty;
+
+		if (duration.Days >= 1)
+			value += duration.Days + " Days ";
+		if (duration.Hours >= 1)
+			value += duration.Hours + " Hours ";
+		if (duration.Minutes >= 1)
+			value += duration.Minutes + " Minutes ";
+		if (duration.Seconds >= 1)
+			value += duration.Seconds + " Seconds";
+
+		return value.Trim();
+	}
+
+	private string ConvertTimeoutTime (TimeSpan duration) {
+		DateTime date = DateTime.Now.Add(duration);
+		string value = date.DayOfWeek.ToString() + ", ";
+		value += date.Day.ToString().PadLeft(2, '0') + ".";
+		value += date.Month.ToString().PadLeft(2, '0') + ".";
+		value += date.Year.ToString().PadLeft(4, '0') + " ";
+		value += date.Hour.ToString().PadLeft(2, '0') + ":";
+		value += date.Minute.ToString().PadLeft(2, '0') + ":";
+		value += date.Second.ToString().PadLeft(2, '0');
+		return value.Trim();
+	}
+
+	private string ConvertTimeoutDate (int day) {
+		switch (day) {
+			case 1: return "Monday";
+			case 2: return "Tuesday";
+			case 3: return "Wednesday";
+			case 4: return "Thursday";
+			case 5: return "Friday";
+			case 6: return "Saturday";
+			default: return "Sunday";
+		}
 	}
 
 	private bool IsModerator (SocketGuildUser user) {

@@ -42,6 +42,11 @@ public partial class TwitchBot {
 
 		this._pubsub.OnStreamUp += this.PubSub_StreamUp;
 		this._pubsub.OnStreamDown += this.PubSub_StreamDown;
+
+		this._pubsub.OnBan += this.PubSub_Ban;
+		this._pubsub.OnUnban += this.PubSub_Unban;
+		this._pubsub.OnTimeout += this.PubSub_Timeout;
+		this._pubsub.OnUntimeout += this.PubSub_Untimeout;
 	}
 
 
