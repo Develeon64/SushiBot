@@ -159,7 +159,7 @@ public class DiscordBot {
 	public async Task SendLiveNotification (string username, string game, string title, DateTime started, int viewerCount, string language, bool mature, string type, string streamUrl, string thumbnailUrl, string iconUrl) {
 		DiscordEmbedBuilder embed = new() {
 			Author = new() { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
-			Description = $"**{this.Escape(username)}** is now on Twitch for *{viewerCount} viewers*!",
+			Description = $"**{this.Escape(username)}** is now on Twitch!",
 			ImageUrl = streamUrl,
 			ThumbnailUrl = thumbnailUrl,
 			Timestamp = started,

@@ -39,11 +39,11 @@ public partial class TwitchBot {
 		}
 	}
 
-	private async void PubSub_StreamDown (object? sender, OnStreamDownArgs e) {
+	private void PubSub_StreamDown (object? sender, OnStreamDownArgs e) {
 		Console.WriteLine(e.ChannelId + " is off!");
 
-		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
-		await RoboSushi.discordBot.SendOffNotification(user.DisplayName, DateTime.Now, this.EncodeImageUrl(user.OfflineImageUrl), this.EncodeImageUrl(user.ProfileImageUrl));
+		/*var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		await RoboSushi.discordBot.SendOffNotification(user.DisplayName, DateTime.Now, this.EncodeImageUrl(user.OfflineImageUrl), this.EncodeImageUrl(user.ProfileImageUrl));*/
 	}
 
 	private async void PubSub_Ban (object? sender, OnBanArgs e) {
