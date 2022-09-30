@@ -108,6 +108,105 @@ public partial class TwitchBot {
 		await RoboSushi.discordBot.SendUntimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon);
 	}
 
+	/*private void PubSub_AutomodCaughtMessage (object? sender, OnAutomodCaughtMessageArgs e) {
+		Console.WriteLine($"AutomodCaughtMessage: [{e.AutomodCaughtMessage.Message.Sender.DisplayName} ({e.AutomodCaughtMessage.ResolverLogin})]: {e.AutomodCaughtMessage.Message}\n{e.AutomodCaughtMessage.Status}: {e.AutomodCaughtMessage.ReasonCode} ({e.AutomodCaughtMessage.ContentClassification.Level} - {e.AutomodCaughtMessage.ContentClassification.Category})");
+	}
+
+	private void PubSub_AutomodCaughtUserMessage (object? sender, OnAutomodCaughtUserMessage e) {
+		Console.WriteLine($"AutomodCaughtUserMessage: [{e.AutomodCaughtMessage.Status}]: ({e.UserId}) {e.AutomodCaughtMessage.MessageId}");
+	}*/
+
+	private async void PubSub_MessageDeleted (object? sender, OnMessageDeletedArgs e) {
+		var channel = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		string channelName = channel.DisplayName;
+		string channelIcon = this.EncodeImageUrl(channel.ProfileImageUrl);
+		var deleter = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.DeletedByUserId })).Users[0];
+		string deleterName = deleter.DisplayName;
+		string deleterIcon = this.EncodeImageUrl(deleter.ProfileImageUrl);
+		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.TargetUserId })).Users[0];
+		string userName = user.DisplayName;
+		string userIcon = this.EncodeImageUrl(user.ProfileImageUrl);
+
+		await RoboSushi.discordBot.SendMessageDeletedNotification(channelName, channelIcon, deleterName, deleterIcon, userName, userIcon, e.Message);
+	}
+
+	private async void PubSub_Clear (object? sender, OnClearArgs e) {
+		var channel = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		string channelName = channel.DisplayName;
+		string channelIcon = this.EncodeImageUrl(channel.ProfileImageUrl);
+		var clearer = (await this._api.Helix.Users.GetUsersAsync(logins: new() { e.Moderator })).Users[0];
+		string clearerName = clearer.DisplayName;
+		string clearerIcon = this.EncodeImageUrl(clearer.ProfileImageUrl);
+
+		await RoboSushi.discordBot.SendChatClearedNotification(channelName, channelIcon, clearerName, clearerIcon);
+	}
+
+	private async void PubSub_SubscribersOnly (object? sender, OnSubscribersOnlyArgs e) {
+		var channel = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		string channelName = channel.DisplayName;
+		string channelIcon = this.EncodeImageUrl(channel.ProfileImageUrl);
+		var moderator = (await this._api.Helix.Users.GetUsersAsync(logins: new() { e.Moderator })).Users[0];
+		string modName = moderator.DisplayName;
+		string modIcon = this.EncodeImageUrl(moderator.ProfileImageUrl);
+
+		await RoboSushi.discordBot.SendSubscriberOnlyNotification(channelName, channelIcon, modName, modIcon, true);
+	}
+
+	private async void PubSub_SubscribersOnlyOff (object? sender, OnSubscribersOnlyOffArgs e) {
+		var channel = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		string channelName = channel.DisplayName;
+		string channelIcon = this.EncodeImageUrl(channel.ProfileImageUrl);
+		var moderator = (await this._api.Helix.Users.GetUsersAsync(logins: new() { e.Moderator })).Users[0];
+		string modName = moderator.DisplayName;
+		string modIcon = this.EncodeImageUrl(moderator.ProfileImageUrl);
+
+		await RoboSushi.discordBot.SendSubscriberOnlyNotification(channelName, channelIcon, modName, modIcon, false);
+	}
+
+	private async void PubSub_EmoteOnly (object? sender, TwitchLib.PubSub.Events.OnEmoteOnlyArgs e) {
+		var channel = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		string channelName = channel.DisplayName;
+		string channelIcon = this.EncodeImageUrl(channel.ProfileImageUrl);
+		var moderator = (await this._api.Helix.Users.GetUsersAsync(logins: new() { e.Moderator })).Users[0];
+		string modName = moderator.DisplayName;
+		string modIcon = this.EncodeImageUrl(moderator.ProfileImageUrl);
+
+		await RoboSushi.discordBot.SendEmoteOnlyNotification(channelName, channelIcon, modName, modIcon, true);
+	}
+
+	private async void PubSub_EmoteOnlyOff (object? sender, OnEmoteOnlyOffArgs e) {
+		var channel = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		string channelName = channel.DisplayName;
+		string channelIcon = this.EncodeImageUrl(channel.ProfileImageUrl);
+		var moderator = (await this._api.Helix.Users.GetUsersAsync(logins: new() { e.Moderator })).Users[0];
+		string modName = moderator.DisplayName;
+		string modIcon = this.EncodeImageUrl(moderator.ProfileImageUrl);
+
+		await RoboSushi.discordBot.SendEmoteOnlyNotification(channelName, channelIcon, modName, modIcon, false);
+	}
+
+	private async void PubSub_R9kBeta (object? sender, OnR9kBetaArgs e) {
+		var channel = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		string channelName = channel.DisplayName;
+		string channelIcon = this.EncodeImageUrl(channel.ProfileImageUrl);
+		var moderator = (await this._api.Helix.Users.GetUsersAsync(logins: new() { e.Moderator })).Users[0];
+		string modName = moderator.DisplayName;
+		string modIcon = this.EncodeImageUrl(moderator.ProfileImageUrl);
+
+		await RoboSushi.discordBot.SendR9kBetaNotification(channelName, channelIcon, modName, modIcon, true);
+	}
+
+	private async void PubSub_R9kBetaOff (object? sender, OnR9kBetaOffArgs e) {
+		var channel = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		string channelName = channel.DisplayName;
+		string channelIcon = this.EncodeImageUrl(channel.ProfileImageUrl);
+		var moderator = (await this._api.Helix.Users.GetUsersAsync(logins: new() { e.Moderator })).Users[0];
+		string modName = moderator.DisplayName;
+		string modIcon = this.EncodeImageUrl(moderator.ProfileImageUrl);
+
+		await RoboSushi.discordBot.SendR9kBetaNotification(channelName, channelIcon, modName, modIcon, false);
+	}
+
 	private async Task CheckTokens (bool force = false) {
 		var valid = await this._api.Auth.ValidateAccessTokenAsync(ConfigManager.Auth.Twitch.Bot.Access);
 		if (valid == null || valid.ExpiresIn > 300 || force == true) {

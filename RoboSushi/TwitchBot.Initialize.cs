@@ -50,13 +50,26 @@ public partial class TwitchBot {
 		this._pubsub.OnUnban += this.PubSub_Unban;
 		this._pubsub.OnTimeout += this.PubSub_Timeout;
 		this._pubsub.OnUntimeout += this.PubSub_Untimeout;
+
+		/*this._pubsub.OnAutomodCaughtMessage += this.PubSub_AutomodCaughtMessage;
+		this._pubsub.OnAutomodCaughtUserMessage += this.PubSub_AutomodCaughtUserMessage;*/
+
+		this._pubsub.OnMessageDeleted += this.PubSub_MessageDeleted;
+		this._pubsub.OnClear += this.PubSub_Clear;
+
+		this._pubsub.OnSubscribersOnly += this.PubSub_SubscribersOnly;
+		this._pubsub.OnSubscribersOnlyOff += this.PubSub_SubscribersOnlyOff;
+		this._pubsub.OnEmoteOnly += this.PubSub_EmoteOnly;
+		this._pubsub.OnEmoteOnlyOff += this.PubSub_EmoteOnlyOff;
+		this._pubsub.OnR9kBeta += this.PubSub_R9kBeta;
+		this._pubsub.OnR9kBetaOff += this.PubSub_R9kBetaOff;
 	}
 
 	private async void TokenTimer_Tick (object? stateInfo) {
 		await this.CheckTokens();
 	}
 
-	private async void Client_JoinedChannel (object? sender, OnJoinedChannelArgs e) {
+	private void Client_JoinedChannel (object? sender, OnJoinedChannelArgs e) {
 		Console.WriteLine("Joined channel " + e.Channel);
 	}
 
@@ -88,6 +101,6 @@ public partial class TwitchBot {
 	}
 
 	private void PubSub_ListenResponse (object? sender, OnListenResponseArgs e) {
-		Console.WriteLine($"Listen-Response: {e.Topic} ({e.Successful}): {e.Response.Error}");
+		//Console.WriteLine($"Listen-Response: {e.Topic} ({e.Successful}): {e.Response.Error}");
 	}
 }
