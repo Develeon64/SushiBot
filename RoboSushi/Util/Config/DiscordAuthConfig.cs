@@ -1,6 +1,6 @@
 ﻿namespace Develeon64.RoboSushi.Util.Config;
 
-public struct BotConfig {
+public struct DiscordAuthConfig {
 	public ulong Id { get; set; }
 	public string Key { get; set; }
 	public string Secret { get; set; }

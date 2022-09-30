@@ -3,5 +3,4 @@
 public struct TwitchConfig {
 	public string Username { get; set; }
 	public string Channel { get; set; }
-	public TwitchAuthConfig Auth { get; set; }
 }

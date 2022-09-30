@@ -36,7 +36,7 @@ public class DiscordBot {
 		this._client.ThreadUpdated += this.Client_ThreadUpdated;
 		this._client.SlashCommandExecuted += this.Client_SlashCommandExecuted;
 
-		await this._client.LoginAsync(TokenType.Bot, ConfigManager.Config.Discord.Bot.Token);
+		await this._client.LoginAsync(TokenType.Bot, ConfigManager.Auth.Discord.Token);
 		await this._client.StartAsync();
 	}
 
@@ -159,7 +159,7 @@ public class DiscordBot {
 	public async Task SendLiveNotification (string username, string game, string title, DateTime started, int viewerCount, string language, bool mature, string type, string streamUrl, string thumbnailUrl, string iconUrl) {
 		DiscordEmbedBuilder embed = new() {
 			Author = new() { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
-			Description = $"**{this.Escape(username)}** is now on Twitch for *{viewerCount} viewers*!",
+			Description = $"**{this.Escape(username)}** is now on Twitch!",
 			ImageUrl = streamUrl,
 			ThumbnailUrl = thumbnailUrl,
 			Timestamp = started,
@@ -237,6 +237,66 @@ public class DiscordBot {
 			Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}",
 		};
 		embed.WithColorLime();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+	}
+
+	public async Task SendMessageDeletedNotification (string channelName, string channelIcon, string deleterName, string deleterIcon, string userName, string userIcon, string message) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = deleterName, IconUrl = deleterIcon },
+			Description = this.Escape(message),
+			ThumbnailUrl = userIcon,
+			Title = $"A message of {userName} was **DELETED**!",
+			Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}",
+		};
+		embed.WithColorPink();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+	}
+
+	public async Task SendChatClearedNotification (string channelName, string channelIcon, string clearerName, string clearerIcon) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = clearerName, IconUrl = clearerIcon },
+			Title = $"The chat was **CLEARED**!",
+			Url = $"https://www.twitch.tv/moderator/{channelName}",
+		};
+		embed.WithColorPink();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+	}
+
+	public async Task SendSubscriberOnlyNotification (string channelName, string channelIcon, string modName, string modIcon, bool on) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = modName, IconUrl = modIcon },
+			Title = $"**Subscriber only** mode is now **{(on ? "ON" : "OFF")}**!",
+			Url = $"https://www.twitch.tv/moderator/{channelName}",
+		};
+		if (on) embed.WithColorPink();
+		else embed.WithColorLime();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+	}
+
+	public async Task SendEmoteOnlyNotification (string channelName, string channelIcon, string modName, string modIcon, bool on) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = modName, IconUrl = modIcon },
+			Title = $"**Emote only** mode is now **{(on ? "ON" : "OFF")}**!",
+			Url = $"https://www.twitch.tv/moderator/{channelName}",
+		};
+		if (on) embed.WithColorYellow();
+		else embed.WithColorLime();
+
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+	}
+
+	public async Task SendR9kBetaNotification (string channelName, string channelIcon, string modName, string modIcon, bool on) {
+		DiscordEmbedBuilder embed = new() {
+			Author = new() { Name = modName, IconUrl = modIcon },
+			Title = $"**R9k** mode is now **{(on ? "ON" : "OFF")}**!",
+			Url = $"https://www.twitch.tv/moderator/{channelName}",
+		};
+		if (on) embed.WithColorPurple();
+		else embed.WithColorLime();
 
 		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
