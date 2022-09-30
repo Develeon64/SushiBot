@@ -36,7 +36,7 @@ public class DiscordBot {
 		this._client.ThreadUpdated += this.Client_ThreadUpdated;
 		this._client.SlashCommandExecuted += this.Client_SlashCommandExecuted;
 
-		await this._client.LoginAsync(TokenType.Bot, ConfigManager.Config.Discord.Bot.Token);
+		await this._client.LoginAsync(TokenType.Bot, ConfigManager.Auth.Discord.Token);
 		await this._client.StartAsync();
 	}
 

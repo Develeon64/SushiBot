@@ -3,7 +3,6 @@
 public struct DiscordConfig {
 	private int readyWait;
 
-	public BotConfig Bot { get; set; }
 	public GuildConfig Guild { get; set; }
 	public bool SyncCommands { get; set; }
 	public ChannelConfig MentalChannel { get; set; }

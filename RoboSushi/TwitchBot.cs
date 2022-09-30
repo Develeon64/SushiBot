@@ -1,4 +1,5 @@
-﻿using TwitchLib.Api;
+﻿using Develeon64.RoboSushi.Util;
+using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
@@ -16,6 +17,7 @@ public partial class TwitchBot {
 	private User? _moderator;
 
 	public TwitchBot () {
+		this._tokenTimer = new(this.TokenTimer_Tick, null, Timeout.Infinite, 300000);
 		this.Initialize();
 	}
 
@@ -104,6 +106,21 @@ public partial class TwitchBot {
 		string userIcon = this.EncodeImageUrl(user.ProfileImageUrl);
 
 		await RoboSushi.discordBot.SendUntimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon);
+	}
+
+	private async Task CheckTokens (bool force = false) {
+		var valid = await this._api.Auth.ValidateAccessTokenAsync(ConfigManager.Auth.Twitch.Bot.Access);
+		if (valid == null || valid.ExpiresIn > 300 || force == true) {
+			var tokens = await this._api.Auth.RefreshAuthTokenAsync(ConfigManager.Auth.Twitch.Bot.Refresh, ConfigManager.Auth.Twitch.Client.Secret, ConfigManager.Auth.Twitch.Client.Id);
+			ConfigManager.RefreshTwitchBotTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresIn);
+			this._api.Settings.AccessToken = tokens.AccessToken;
+		}
+
+		valid = await this._api.Auth.ValidateAccessTokenAsync(ConfigManager.Auth.Twitch.Channel.Access);
+		if (valid == null || valid.ExpiresIn > 300 || force == true) {
+			var tokens = await this._api.Auth.RefreshAuthTokenAsync(ConfigManager.Auth.Twitch.Channel.Refresh, ConfigManager.Auth.Twitch.Client.Secret, ConfigManager.Auth.Twitch.Client.Id);
+			ConfigManager.RefreshTwitchChannelTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresIn);
+		}
 	}
 
 	private string EncodeImageUrl (string url) {
