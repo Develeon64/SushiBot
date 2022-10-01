@@ -171,7 +171,7 @@ public class DiscordBot {
 	}
 
 	private async Task UpdateMemberCount (string reason = "") {
-		int count = 0;
+		long count = 0;
 		List<string> counted = new();
 
 		await foreach (var members in this._guild.GetUsersAsync()) {
@@ -183,8 +183,10 @@ public class DiscordBot {
 				}
 			}
 		}
-
 		await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel ?? 0).ModifyAsync((props) => { props.Name = $"{count} Sushi-Rollen"; }, new() { AuditLogReason = reason});
+
+		count = await RoboSushi.twitchBot.GetFollowerCount();
+		await this._guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel ?? 0).ModifyAsync((props) => { props.Name = $"{count} Follower"; }, new() { AuditLogReason = reason });
 	}
 
 	public async Task SendLiveNotification (string username, string game, string title, DateTime started, int viewerCount, string language, bool mature, string type, string streamUrl, string thumbnailUrl, string iconUrl) {
