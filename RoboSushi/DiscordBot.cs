@@ -171,13 +171,25 @@ public class DiscordBot {
 		embed.AddField("__**Category**__", game, true);
 		embed.AddField("__**Type**__", type, true);
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync("@everyone", embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+		if (ConfigManager.Config.Discord.NotifyChannel.Token != null) {
+			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync("@everyone", embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+		}
+		else if (ConfigManager.Config.Discord.NotifyChannel.MessageId != null) {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Config.Discord.NotifyChannel.MessageId ?? 0, (props) => {
+				props.Content = $"@everyone look at https://www.twitch.tv/{username}";
+				props.Embed = embed.Build();
+			});
+			await (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync("@everyone look here!")).DeleteAsync();
+		}
+		else {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync("@everyone", false, embed.Build());
+		}
 	}
 
 	public async Task SendOffNotification (string username, DateTime ended, string streamUrl, string iconUrl) {
 		DiscordEmbedBuilder embed = new() {
 			Author = new() { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
-			Description = $"**{this.EscapeMessage(username)}** is now *offline* again.",
+			Description = $"**{this.EscapeMessage(username)}** is now *offline* right now.",
 			ImageUrl = streamUrl,
 			Timestamp = ended,
 			Title = "",
@@ -187,7 +199,18 @@ public class DiscordBot {
 		//embed.AddField("__**Category**__", game, true);
 		//embed.AddField("__**Type**__", type, true);
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+		if (ConfigManager.Config.Discord.NotifyChannel.Token != null) {
+			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+		}
+		else if (ConfigManager.Config.Discord.NotifyChannel.MessageId != null) {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Config.Discord.NotifyChannel.MessageId ?? 0, (props) => {
+				props.Content = "";
+				props.Embed = embed.Build();
+			});
+		}
+		else {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync(embed: embed.Build());
+		}
 	}
 
 	public async Task SendBanNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon, DateTime userCreated, string? reason = null) {

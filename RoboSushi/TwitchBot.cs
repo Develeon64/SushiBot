@@ -31,6 +31,7 @@ public partial class TwitchBot {
 
 	private async void PubSub_StreamUp (object? sender, OnStreamUpArgs e) {
 		Console.WriteLine(e.ChannelId + " went live!");
+		await Task.Delay(30000);
 
 		var info = await this._api.Helix.Streams.GetStreamsAsync(userIds: new() { e.ChannelId });
 		if (info != null && info.Streams != null && info.Streams.Length >= 1) {
@@ -41,11 +42,11 @@ public partial class TwitchBot {
 		}
 	}
 
-	private void PubSub_StreamDown (object? sender, OnStreamDownArgs e) {
+	private async void PubSub_StreamDown (object? sender, OnStreamDownArgs e) {
 		Console.WriteLine(e.ChannelId + " is off!");
 
-		/*var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
-		await RoboSushi.discordBot.SendOffNotification(user.DisplayName, DateTime.Now, this.EncodeImageUrl(user.OfflineImageUrl), this.EncodeImageUrl(user.ProfileImageUrl));*/
+		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
+		await RoboSushi.discordBot.SendOffNotification(user.DisplayName, DateTime.Now, this.EncodeImageUrl(user.OfflineImageUrl), this.EncodeImageUrl(user.ProfileImageUrl));
 	}
 
 	private async void PubSub_Ban (object? sender, OnBanArgs e) {
@@ -224,6 +225,6 @@ public partial class TwitchBot {
 	}
 
 	private string EncodeImageUrl (string url) {
-		return $"{url.Replace("-{width}x{height}", null)}?{DateTimeOffset.Now.ToUnixTimeSeconds()}";
+		return String.IsNullOrWhiteSpace(url) ? url : $"{url.Replace("-{width}x{height}", null)}?{DateTimeOffset.Now.ToUnixTimeSeconds()}";
 	}
 }
