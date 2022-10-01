@@ -189,11 +189,11 @@ public class DiscordBot {
 	public async Task SendOffNotification (string username, DateTime ended, string streamUrl, string iconUrl) {
 		DiscordEmbedBuilder embed = new() {
 			Author = new() { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
-			Description = $"**{this.EscapeMessage(username)}** is now *offline* right now.",
+			Description = $"**{this.EscapeMessage(username)}** is *offline* right now.",
 			ImageUrl = streamUrl,
 			Timestamp = ended,
-			Title = "",
-			Url = $"https://www.twitch.tv/{username}",
+			Title = "Stream is down",
+			Url = $"https://www.twitch.tv/{username}/videos",
 		};
 		embed.WithColorPurple();
 		//embed.AddField("__**Category**__", game, true);
