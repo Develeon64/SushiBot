@@ -170,7 +170,7 @@ public class DiscordBot {
 			await thread.DeleteAsync();
 	}
 
-	private async Task UpdateMemberCount (string reason = "") {
+	public async Task UpdateMemberCount (string reason = "") {
 		long count = 0;
 		List<string> counted = new();
 
