@@ -7,6 +7,7 @@ public struct DiscordConfig {
 	public bool SyncCommands { get; set; }
 	public ChannelConfig MentalChannel { get; set; }
 	public ChannelConfig NotifyChannel { get; set; }
+	public ulong? CountChannel { get; set; }
 	public ChannelConfig ModChannel { get; set; }
 	public ulong[] AdminRoles { get; set; }
 

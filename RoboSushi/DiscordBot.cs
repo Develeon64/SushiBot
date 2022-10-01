@@ -33,6 +33,9 @@ public class DiscordBot {
 		this._client.Log += this.Client_Log;
 		this._client.Ready += this.Client_Ready;
 
+		this._client.UserJoined += this.Client_UserJoined;
+		this._client.UserLeft += this.Client_UserLeft;
+
 		this._client.ThreadCreated += this.Client_ThreadCreated;
 		this._client.ThreadUpdated += this.Client_ThreadUpdated;
 		this._client.SlashCommandExecuted += this.Client_SlashCommandExecuted;
@@ -84,11 +87,21 @@ public class DiscordBot {
 		}
 
 		this._presenceTimer.Change(30000, 300000);
+
+		await this.UpdateMemberCount();
 	}
 
 	private Task Client_Log (LogMessage message) {
 		//Console.WriteLine ($"{DateTime.Now:dd.MM.yyyy HH:mm:ss} | {message.Severity.ToString().PadRight(8).Substring(0, 8)} | {message.Source.PadRight(8).Substring(0, 8)} | {message.Message ?? message.Exception.Message}");
 		return Task.CompletedTask;
+	}
+
+	private async Task Client_UserJoined (SocketGuildUser member) {
+		await this.UpdateMemberCount();
+	}
+
+	private async Task Client_UserLeft (SocketGuild guild, SocketUser user) {
+		await this.UpdateMemberCount();
 	}
 
 	private async Task Client_MessageReceived (SocketMessage message) {
@@ -157,6 +170,23 @@ public class DiscordBot {
 			await thread.DeleteAsync();
 	}
 
+	private async Task UpdateMemberCount () {
+		int count = 0;
+		List<string> counted = new();
+
+		await foreach (var members in this._guild.GetUsersAsync()) {
+			foreach (var member in members) {
+				if (!member.IsBot && member.Id != 372108947303301124 && member.Id != 344136468068958218 && !counted.Contains(member.Username.ToLower()) && !counted.Contains(member.Nickname?.ToLower() ?? String.Empty)) {
+					count += 1;
+					counted.Add(member.Username.ToLower());
+					if (!String.IsNullOrWhiteSpace(member.Nickname)) counted.Add(member.Nickname.ToLower());
+				}
+			}
+		}
+
+		await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel ?? 0).ModifyAsync((props) => { props.Name = $"{count} Sushi-Rollen"; });
+	}
+
 	public async Task SendLiveNotification (string username, string game, string title, DateTime started, int viewerCount, string language, bool mature, string type, string streamUrl, string thumbnailUrl, string iconUrl) {
 		DiscordEmbedBuilder embed = new() {
 			Author = new() { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
@@ -189,11 +219,11 @@ public class DiscordBot {
 	public async Task SendOffNotification (string username, DateTime ended, string streamUrl, string iconUrl) {
 		DiscordEmbedBuilder embed = new() {
 			Author = new() { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
-			Description = $"**{this.EscapeMessage(username)}** is *offline* right now.",
+			Description = $"**[{this.EscapeMessage(username)}](https://www.twitch.tv/{username})** is *offline* right now.\nBut you can watch the latest [VODs](https://www.twitch.tv/{username}/videos).",
 			ImageUrl = streamUrl,
 			Timestamp = ended,
 			Title = "Stream is down",
-			Url = $"https://www.twitch.tv/{username}/videos",
+			Url = $"https://www.twitch.tv/{username}/schedule",
 		};
 		embed.WithColorPurple();
 		//embed.AddField("__**Category**__", game, true);
