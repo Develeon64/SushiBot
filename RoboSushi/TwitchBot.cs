@@ -40,6 +40,8 @@ public partial class TwitchBot {
 			string gameThumbnail = this.EncodeImageUrl((await this._api.Helix.Games.GetGamesAsync(gameIds: new() { stream.GameId })).Games[0].BoxArtUrl);
 			await RoboSushi.discordBot.SendLiveNotification(stream.UserName, stream.GameName, stream.Title, stream.StartedAt, stream.ViewerCount, stream.Language, stream.IsMature, $"{stream.Type.Substring(0, 1).ToUpper()}{stream.Type.Substring(1)}", this.EncodeImageUrl(stream.ThumbnailUrl), gameThumbnail, userIcon);
 		}
+
+		await RoboSushi.discordBot.UpdateMemberCount();
 	}
 
 	private async void PubSub_StreamDown (object? sender, OnStreamDownArgs e) {
@@ -47,6 +49,8 @@ public partial class TwitchBot {
 
 		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.ChannelId })).Users[0];
 		await RoboSushi.discordBot.SendOffNotification(user.DisplayName, DateTime.Now, this.EncodeImageUrl(user.OfflineImageUrl), this.EncodeImageUrl(user.ProfileImageUrl));
+
+		await RoboSushi.discordBot.UpdateMemberCount();
 	}
 
 	private async void PubSub_Ban (object? sender, OnBanArgs e) {
@@ -227,6 +231,8 @@ public partial class TwitchBot {
 			var tokens = await this._api.Auth.RefreshAuthTokenAsync(ConfigManager.Auth.Twitch.Channel.Refresh, ConfigManager.Auth.Twitch.Client.Secret, ConfigManager.Auth.Twitch.Client.Id);
 			ConfigManager.RefreshTwitchChannelTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresIn);
 		}
+
+		await RoboSushi.discordBot.UpdateMemberCount();
 	}
 
 	private string EncodeImageUrl (string url) {
