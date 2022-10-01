@@ -209,6 +209,11 @@ public partial class TwitchBot {
 		await RoboSushi.discordBot.SendR9kBetaNotification(channelName, channelIcon, modName, modIcon, false);
 	}
 
+	public async Task<long> GetFollowerCount () {
+		var id = await this._api.Helix.Users.GetUsersAsync(logins: new() { ConfigManager.Config.Twitch.Channel });
+		return (await this._api.Helix.Users.GetUsersFollowsAsync(toId: id.Users[0].Id)).TotalFollows;
+	}
+
 	private async Task CheckTokens (bool force = false) {
 		var valid = await this._api.Auth.ValidateAccessTokenAsync(ConfigManager.Auth.Twitch.Bot.Access);
 		if (valid == null || valid.ExpiresIn > 300 || force == true) {

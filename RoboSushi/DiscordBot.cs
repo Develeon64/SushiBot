@@ -88,7 +88,7 @@ public class DiscordBot {
 
 		this._presenceTimer.Change(30000, 300000);
 
-		await this.UpdateMemberCount();
+		await this.UpdateMemberCount("Member-Count checkup at boot");
 	}
 
 	private Task Client_Log (LogMessage message) {
@@ -97,11 +97,11 @@ public class DiscordBot {
 	}
 
 	private async Task Client_UserJoined (SocketGuildUser member) {
-		await this.UpdateMemberCount();
+		await this.UpdateMemberCount($"New Member-Count: Member joined: {member.Username}#{member.Discriminator}");
 	}
 
 	private async Task Client_UserLeft (SocketGuild guild, SocketUser user) {
-		await this.UpdateMemberCount();
+		await this.UpdateMemberCount($"New Member-Count: Member left: {user.Username}#{user.Discriminator}");
 	}
 
 	private async Task Client_MessageReceived (SocketMessage message) {
@@ -170,8 +170,8 @@ public class DiscordBot {
 			await thread.DeleteAsync();
 	}
 
-	private async Task UpdateMemberCount () {
-		int count = 0;
+	private async Task UpdateMemberCount (string reason = "") {
+		long count = 0;
 		List<string> counted = new();
 
 		await foreach (var members in this._guild.GetUsersAsync()) {
@@ -183,8 +183,10 @@ public class DiscordBot {
 				}
 			}
 		}
+		await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel ?? 0).ModifyAsync((props) => { props.Name = $"{count} Sushi-Rollen"; }, new() { AuditLogReason = reason});
 
-		await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel ?? 0).ModifyAsync((props) => { props.Name = $"{count} Sushi-Rollen"; });
+		count = await RoboSushi.twitchBot.GetFollowerCount();
+		await this._guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel ?? 0).ModifyAsync((props) => { props.Name = $"{count} Follower"; }, new() { AuditLogReason = reason });
 	}
 
 	public async Task SendLiveNotification (string username, string game, string title, DateTime started, int viewerCount, string language, bool mature, string type, string streamUrl, string thumbnailUrl, string iconUrl) {
