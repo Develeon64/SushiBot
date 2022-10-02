@@ -71,16 +71,16 @@ public class DiscordBot {
 		await this.Client_Log(new(LogSeverity.Info, "System", "Bot is ready!"));
 
 		if (ConfigManager.Config.Discord.SyncCommands) {
-			List<SlashCommandBuilder> slashCommandBuilders = new();
-			slashCommandBuilders.Add(new() {
-				Name = "close",
-				Description = "Close the current Thread",
-			});
-
-			slashCommandBuilders.Add(new() {
-				Name = "version",
-				Description = "Show Version information of the bot.",
-			});
+			List<SlashCommandBuilder> slashCommandBuilders = new() {
+				new() {
+					Name = "close",
+					Description = "Close the current Thread",
+				},
+				new() {
+					Name = "version",
+					Description = "Show Version information of the bot.",
+				}
+			};
 
 			foreach (SlashCommandBuilder command in slashCommandBuilders)
 				await this._guild.CreateApplicationCommandAsync(command.Build());
@@ -219,7 +219,7 @@ public class DiscordBot {
 		}
 		else {
 			var channel = this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id);
-			if (ConfigManager.Db.Discord.NotifyMessageId != null && ConfigManager.Db.Discord.NotifyMessageId != 0) await channel.DeleteMessageAsync(ConfigManager.Db.Discord.NotifyMessageId);
+			if (ConfigManager.Db.Discord.NotifyMessageId is not null and not 0) await channel.DeleteMessageAsync(ConfigManager.Db.Discord.NotifyMessageId ?? 0);
 			ConfigManager.Db.Discord.NotifyMessageId = (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync(everyone, false, embed.Build())).Id;
 		}
 	}
@@ -240,8 +240,8 @@ public class DiscordBot {
 		if (ConfigManager.Config.Discord.NotifyChannel.Token != null) {
 			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
 		}
-		else if (ConfigManager.Db.Discord.NotifyMessageId != null && ConfigManager.Db.Discord.NotifyMessageId != 0) {
-			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Db.Discord.NotifyMessageId, (props) => {
+		else if (ConfigManager.Db.Discord.NotifyMessageId is not null and not 0) {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Db.Discord.NotifyMessageId ?? 0, (props) => {
 				props.Content = "";
 				props.Embed = embed.Build();
 			});
