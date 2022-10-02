@@ -98,6 +98,11 @@ public partial class TwitchBot {
 		this._pubsub.ListenToChatModeratorActions(this._moderator?.Id, this._channel?.Id);
 		this._pubsub.ListenToUserModerationNotifications(this._moderator?.Id, this._channel?.Id);
 		this._pubsub.SendTopics(ConfigManager.Auth.Twitch.Bot.Access);
+
+		//Thread.Sleep(30000);
+		//this.PubSub_StreamUp(null, new() { ChannelId = this._channel?.Id });
+		//Thread.Sleep(300000);
+		//this.PubSub_StreamDown(null, new() { ChannelId = this._channel?.Id });
 	}
 
 	private void PubSub_ListenResponse (object? sender, OnListenResponseArgs e) {
