@@ -92,7 +92,7 @@ public class DiscordBot {
 	}
 
 	private Task Client_Log (LogMessage message) {
-		//Console.WriteLine ($"{DateTime.Now:dd.MM.yyyy HH:mm:ss} | {message.Severity.ToString().PadRight(8).Substring(0, 8)} | {message.Source.PadRight(8).Substring(0, 8)} | {message.Message ?? message.Exception.Message}");
+		Console.WriteLine ($"{DateTime.Now:dd.MM.yyyy HH:mm:ss} | {message.Severity.ToString().PadRight(8).Substring(0, 8)} | {message.Source.PadRight(8).Substring(0, 8)} | {message.Message ?? message.Exception.Message}");
 		return Task.CompletedTask;
 	}
 
@@ -185,10 +185,16 @@ public class DiscordBot {
 					}
 				}
 			}
-			await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel ?? 0).ModifyAsync((props) => { props.Name = $"{memberCount} Sushi-Rollen"; }, new() { AuditLogReason = reason });
+			string memberString = String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel.Prefix) ? String.Empty : $"{ConfigManager.Config.Discord.CountChannel.Prefix}: ";
+			memberString += memberCount;
+			if (!String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel.Postfix)) memberString += $" {ConfigManager.Config.Discord.CountChannel.Postfix}";
+			await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel.Id).ModifyAsync((props) => { props.Name = memberString; }, new() { AuditLogReason = reason });
 
-			long followerCcount = await RoboSushi.twitchBot.GetFollowerCount();
-			await this._guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel ?? 0).ModifyAsync((props) => { props.Name = $"{followerCcount} Follower"; }, new() { AuditLogReason = reason });
+			long followerCount = await RoboSushi.twitchBot.GetFollowerCount();
+			string followerString = String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel.Prefix) ? String.Empty : $"{ConfigManager.Config.Discord.FollowerChannel.Prefix}: ";
+			followerString += followerCount;
+			if (!String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel.Postfix)) followerString += $" {ConfigManager.Config.Discord.FollowerChannel.Postfix}";
+			await this._guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel.Id).ModifyAsync((props) => { props.Name = followerString; }, new() { AuditLogReason = reason });
 		}
 	}
 

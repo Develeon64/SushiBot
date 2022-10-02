@@ -7,10 +7,10 @@ using System.Text;
 namespace Develeon64.RoboSushi.Util;
 
 public static class ConfigManager {
-	private static string confPath = "Var/Config/Configuration.json";
-	private static string authPath = "Var/Config/Authentification.json";
+	private static string confPath = "Var/Config/Configuration.jsonc";
+	private static string authPath = "Var/Config/Authentification.jsonc";
 	private static string dbPath = "Var/DB/";
-	private static string dbName = "DataBase.jsonc";
+	private static string dbName = "Database.json";
 
 	public static JsonSerializerSettings JsonSettings { get; } = new() {
 		DefaultValueHandling = DefaultValueHandling.Populate,
@@ -28,7 +28,7 @@ public static class ConfigManager {
 		ConfigManager.authPath = filePath ?? ConfigManager.authPath;
 		ConfigManager.Config = JToken.Parse(File.ReadAllText(ConfigManager.confPath)).ToObject<AppConfig>();
 		ConfigManager.Auth = JToken.Parse(File.ReadAllText(ConfigManager.authPath)).ToObject<AuthConfig>();
-		ConfigManager.Db = JsonConvert.DeserializeObject<AppDb>(File.ReadAllText("Var/DB/" + "Database.jsonc"), JsonSettings);
+		ConfigManager.Db = JsonConvert.DeserializeObject<AppDb>(File.ReadAllText("Var/DB/" + "Database.json"), JsonSettings);
 		AppDb.WriteFile();
 	}
 
