@@ -1,4 +1,5 @@
 ﻿using Develeon64.RoboSushi.Util.Config;
+using Develeon64.RoboSushi.Util.Db;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
@@ -6,16 +7,29 @@ using System.Text;
 namespace Develeon64.RoboSushi.Util;
 
 public static class ConfigManager {
-	public static AppConfig Config { get; set; }
-	public static AuthConfig Auth { get; set; }
 	private static string confPath = "Var/Config/Configuration.json";
 	private static string authPath = "Var/Config/Authentification.json";
+	private static string dbPath = "Var/DB/";
+	private static string dbName = "DataBase.jsonc";
+
+	public static JsonSerializerSettings JsonSettings { get; } = new() {
+		DefaultValueHandling = DefaultValueHandling.Populate,
+		FloatFormatHandling = FloatFormatHandling.DefaultValue,
+		Formatting = Formatting.None,
+		StringEscapeHandling = StringEscapeHandling.EscapeNonAscii,
+	};
+
+	public static AppConfig Config { get; set; }
+	public static AuthConfig Auth { get; set; }
+	public static AppDb Db { get; set; }
 
 	public static void Initialize (string? filePath = null) {
 		ConfigManager.confPath = filePath ?? ConfigManager.confPath;
 		ConfigManager.authPath = filePath ?? ConfigManager.authPath;
 		ConfigManager.Config = JToken.Parse(File.ReadAllText(ConfigManager.confPath)).ToObject<AppConfig>();
 		ConfigManager.Auth = JToken.Parse(File.ReadAllText(ConfigManager.authPath)).ToObject<AuthConfig>();
+		ConfigManager.Db = JsonConvert.DeserializeObject<AppDb>(File.ReadAllText("Var/DB/" + "Database.jsonc"), JsonSettings);
+		AppDb.WriteFile();
 	}
 
 	public static void RefreshTwitchBotTokens (string accessToken, string refreshToken, int? expiresIn = 0) {

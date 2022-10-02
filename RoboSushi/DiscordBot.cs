@@ -71,16 +71,16 @@ public class DiscordBot {
 		await this.Client_Log(new(LogSeverity.Info, "System", "Bot is ready!"));
 
 		if (ConfigManager.Config.Discord.SyncCommands) {
-			List<SlashCommandBuilder> slashCommandBuilders = new();
-			slashCommandBuilders.Add(new() {
-				Name = "close",
-				Description = "Close the current Thread",
-			});
-
-			slashCommandBuilders.Add(new() {
-				Name = "version",
-				Description = "Show Version information of the bot.",
-			});
+			List<SlashCommandBuilder> slashCommandBuilders = new() {
+				new() {
+					Name = "close",
+					Description = "Close the current Thread",
+				},
+				new() {
+					Name = "version",
+					Description = "Show Version information of the bot.",
+				}
+			};
 
 			foreach (SlashCommandBuilder command in slashCommandBuilders)
 				await this._guild.CreateApplicationCommandAsync(command.Build());
@@ -171,22 +171,25 @@ public class DiscordBot {
 	}
 
 	public async Task UpdateMemberCount (string reason = "") {
-		long count = 0;
-		List<string> counted = new();
+		if (this._guild != null) {
+			long memberCount = 0;
+			List<string> counted = new();
 
-		await foreach (var members in this._guild.GetUsersAsync()) {
-			foreach (var member in members) {
-				if (!member.IsBot && member.Id != 372108947303301124 && member.Id != 344136468068958218 && !counted.Contains(member.Username.ToLower()) && !counted.Contains(member.Nickname?.ToLower() ?? String.Empty)) {
-					count += 1;
-					counted.Add(member.Username.ToLower());
-					if (!String.IsNullOrWhiteSpace(member.Nickname)) counted.Add(member.Nickname.ToLower());
+			await foreach (var members in this._guild.GetUsersAsync()) {
+				foreach (var member in members) {
+					if (!member.IsBot && member.Id != 372108947303301124 && member.Id != 344136468068958218 && !counted.Contains(member.Username.ToLower()) && !counted.Contains(member.Nickname?.ToLower() ?? String.Empty)) {
+						memberCount += 1;
+						counted.Add(member.Username.ToLower());
+						if (!String.IsNullOrWhiteSpace(member.Nickname))
+							counted.Add(member.Nickname.ToLower());
+					}
 				}
 			}
-		}
-		await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel ?? 0).ModifyAsync((props) => { props.Name = $"{count} Sushi-Rollen"; }, new() { AuditLogReason = reason});
+			await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel ?? 0).ModifyAsync((props) => { props.Name = $"{memberCount} Sushi-Rollen"; }, new() { AuditLogReason = reason });
 
-		count = await RoboSushi.twitchBot.GetFollowerCount();
-		await this._guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel ?? 0).ModifyAsync((props) => { props.Name = $"{count} Follower"; }, new() { AuditLogReason = reason });
+			long followerCcount = await RoboSushi.twitchBot.GetFollowerCount();
+			await this._guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel ?? 0).ModifyAsync((props) => { props.Name = $"{followerCcount} Follower"; }, new() { AuditLogReason = reason });
+		}
 	}
 
 	public async Task SendLiveNotification (string username, string game, string title, DateTime started, int viewerCount, string language, bool mature, string type, string streamUrl, string thumbnailUrl, string iconUrl) {
@@ -203,18 +206,21 @@ public class DiscordBot {
 		embed.AddField("__**Category**__", game, true);
 		embed.AddField("__**Type**__", type, true);
 
+		string everyone = $"@everyone look at https://www.twitch.tv/{username.ToLower()}";
 		if (ConfigManager.Config.Discord.NotifyChannel.Token != null) {
-			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync("@everyone", embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync($"@everyone look at https://www.twitch.tv/{username}", embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
 		}
 		else if (ConfigManager.Config.Discord.NotifyChannel.MessageId != null) {
 			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Config.Discord.NotifyChannel.MessageId ?? 0, (props) => {
-				props.Content = $"@everyone look at https://www.twitch.tv/{username}";
+				props.Content = everyone;
 				props.Embed = embed.Build();
 			});
-			await (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync("@everyone look here!")).DeleteAsync();
+			await (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync(everyone)).DeleteAsync();
 		}
 		else {
-			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync("@everyone", false, embed.Build());
+			var channel = this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id);
+			if (ConfigManager.Db.Discord.NotifyMessageId is not null and not 0) await channel.DeleteMessageAsync(ConfigManager.Db.Discord.NotifyMessageId ?? 0);
+			ConfigManager.Db.Discord.NotifyMessageId = (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync(everyone, false, embed.Build())).Id;
 		}
 	}
 
@@ -233,6 +239,12 @@ public class DiscordBot {
 
 		if (ConfigManager.Config.Discord.NotifyChannel.Token != null) {
 			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+		}
+		else if (ConfigManager.Db.Discord.NotifyMessageId is not null and not 0) {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Db.Discord.NotifyMessageId ?? 0, (props) => {
+				props.Content = "";
+				props.Embed = embed.Build();
+			});
 		}
 		else if (ConfigManager.Config.Discord.NotifyChannel.MessageId != null) {
 			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Config.Discord.NotifyChannel.MessageId ?? 0, (props) => {
