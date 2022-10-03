@@ -67,10 +67,10 @@ public class DiscordBot {
 	}
 
 	private async Task Client_Ready () {
-		this._guild = this._client.Guilds.ToDictionary((SocketGuild guild) => { return guild.Id; })[ConfigManager.Config.Discord.Guild.Id];
+		this._guild = this._client.Guilds.ToDictionary((SocketGuild guild) => { return guild.Id; })[ConfigManager.Config.Discord.Guild];
 		await this.Client_Log(new(LogSeverity.Info, "System", "Bot is ready!"));
 
-		if (ConfigManager.Config.Discord.SyncCommands) {
+		if (ConfigManager.Config.Discord.SyncCommands == true) {
 			List<SlashCommandBuilder> slashCommandBuilders = new() {
 				new() {
 					Name = "close",
@@ -115,7 +115,7 @@ public class DiscordBot {
 			case "close": {
 				if (command.Channel.GetChannelType() == ChannelType.PublicThread) {
 					SocketThreadChannel thread = command.Channel as SocketThreadChannel;
-					if (thread?.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel.Id && (thread?.Owner.Id == command.User.Id || this.IsModerator(this._guild.GetUser(command.User.Id)))) {
+					if (thread?.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel?.Id && (thread?.Owner.Id == command.User.Id || this.IsModerator(this._guild.GetUser(command.User.Id)))) {
 						await thread.DeleteAsync();
 						await command.RespondWithModalAsync(new ModalBuilder("Thread wurde gelöscht.", "thread_deletion_modal").Build());
 					}
@@ -151,7 +151,7 @@ public class DiscordBot {
 	}
 
 	private async Task Client_ThreadCreated (SocketThreadChannel thread) {
-		if (thread.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel.Id) {
+		if (thread.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel?.Id) {
 			await thread.JoinAsync();
 
 			JObject newThread = new() {
@@ -166,7 +166,7 @@ public class DiscordBot {
 	}
 
 	private async Task Client_ThreadUpdated (Cacheable<SocketThreadChannel, ulong> old, SocketThreadChannel thread) {
-		if (thread.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel.Id && thread.IsArchived)
+		if (thread.ParentChannel.Id == ConfigManager.Config.Discord.MentalChannel?.Id && thread.IsArchived)
 			await thread.DeleteAsync();
 	}
 
@@ -185,16 +185,16 @@ public class DiscordBot {
 					}
 				}
 			}
-			string memberString = String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel.Prefix) ? String.Empty : $"{ConfigManager.Config.Discord.CountChannel.Prefix}: ";
+			string memberString = String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel?.Prefix) ? String.Empty : $"{ConfigManager.Config.Discord.CountChannel?.Prefix}: ";
 			memberString += memberCount;
-			if (!String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel.Postfix)) memberString += $" {ConfigManager.Config.Discord.CountChannel.Postfix}";
-			await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel.Id).ModifyAsync((props) => { props.Name = memberString; }, new() { AuditLogReason = reason });
+			if (!String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel?.Postfix)) memberString += $" {ConfigManager.Config.Discord.CountChannel?.Postfix}";
+			await this._guild.GetChannel(ConfigManager.Config.Discord.CountChannel?.Id ?? 0).ModifyAsync((props) => { props.Name = memberString; }, new() { AuditLogReason = reason });
 
 			long followerCount = await RoboSushi.twitchBot.GetFollowerCount();
-			string followerString = String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel.Prefix) ? String.Empty : $"{ConfigManager.Config.Discord.FollowerChannel.Prefix}: ";
+			string followerString = String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel?.Prefix) ? String.Empty : $"{ConfigManager.Config.Discord.FollowerChannel?.Prefix}: ";
 			followerString += followerCount;
-			if (!String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel.Postfix)) followerString += $" {ConfigManager.Config.Discord.FollowerChannel.Postfix}";
-			await this._guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel.Id).ModifyAsync((props) => { props.Name = followerString; }, new() { AuditLogReason = reason });
+			if (!String.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel?.Postfix)) followerString += $" {ConfigManager.Config.Discord.FollowerChannel?.Postfix}";
+			await this._guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel?.Id ?? 0).ModifyAsync((props) => { props.Name = followerString; }, new() { AuditLogReason = reason });
 		}
 	}
 
@@ -211,22 +211,25 @@ public class DiscordBot {
 		embed.WithColorGreen();
 		embed.AddField("__**Category**__", game, true);
 		embed.AddField("__**Type**__", type, true);
+		embed.AddBlankField(false);
+		embed.AddField("__**Instagram**__", "[@sushiiaims](https://www.instagram.com/sushiiaims/)", true);
+		embed.AddField("__**TikTok**__", "[@sushiaims](https://www.tiktok.com/@sushiaims/)", true);
 
 		string everyone = $"@everyone look at https://www.twitch.tv/{username.ToLower()}";
-		if (ConfigManager.Config.Discord.NotifyChannel.Token != null) {
-			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync($"@everyone look at https://www.twitch.tv/{username}", embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+		if (ConfigManager.Config.Discord.NotifyChannel?.Token != null) {
+			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0, ConfigManager.Config.Discord.NotifyChannel?.Token).SendMessageAsync($"@everyone look at https://www.twitch.tv/{username}", embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
 		}
-		else if (ConfigManager.Config.Discord.NotifyChannel.MessageId != null) {
-			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Config.Discord.NotifyChannel.MessageId ?? 0, (props) => {
+		else if (ConfigManager.Config.Discord.NotifyChannel?.MessageId != null) {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0).ModifyMessageAsync(ConfigManager.Config.Discord.NotifyChannel?.MessageId ?? 0, (props) => {
 				props.Content = everyone;
 				props.Embed = embed.Build();
 			});
-			await (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync(everyone)).DeleteAsync();
+			await (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0).SendMessageAsync(everyone)).DeleteAsync();
 		}
 		else {
-			var channel = this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id);
+			var channel = this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0);
 			if (ConfigManager.Db.Discord.NotifyMessageId is not null and not 0) await channel.DeleteMessageAsync(ConfigManager.Db.Discord.NotifyMessageId ?? 0);
-			ConfigManager.Db.Discord.NotifyMessageId = (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync(everyone, false, embed.Build())).Id;
+			ConfigManager.Db.Discord.NotifyMessageId = (await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0).SendMessageAsync(everyone, false, embed.Build())).Id;
 		}
 	}
 
@@ -242,24 +245,27 @@ public class DiscordBot {
 		embed.WithColorPurple();
 		//embed.AddField("__**Category**__", game, true);
 		//embed.AddField("__**Type**__", type, true);
+		//embed.AddField("__**Socials**__", DiscordEmbedBuilder.BlankChar, false);
+		embed.AddField("__**Instagram**__", "[@sushiiaims](https://www.instagram.com/sushiiaims/)", true);
+		embed.AddField("__**TikTok**__", "[@sushiaims](https://www.tiktok.com/@sushiaims/)", true);
 
-		if (ConfigManager.Config.Discord.NotifyChannel.Token != null) {
-			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel.Id, ConfigManager.Config.Discord.NotifyChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
+		if (ConfigManager.Config.Discord.NotifyChannel?.Token != null) {
+			await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0, ConfigManager.Config.Discord.NotifyChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: this._client.CurrentUser.Username, avatarUrl: this._client.CurrentUser.GetAvatarUrl());
 		}
 		else if (ConfigManager.Db.Discord.NotifyMessageId is not null and not 0) {
-			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Db.Discord.NotifyMessageId ?? 0, (props) => {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0).ModifyMessageAsync(ConfigManager.Db.Discord.NotifyMessageId ?? 0, (props) => {
 				props.Content = "";
 				props.Embed = embed.Build();
 			});
 		}
-		else if (ConfigManager.Config.Discord.NotifyChannel.MessageId != null) {
-			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).ModifyMessageAsync(ConfigManager.Config.Discord.NotifyChannel.MessageId ?? 0, (props) => {
+		else if (ConfigManager.Config.Discord.NotifyChannel?.MessageId != null) {
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0).ModifyMessageAsync(ConfigManager.Config.Discord.NotifyChannel?.MessageId ?? 0, (props) => {
 				props.Content = "";
 				props.Embed = embed.Build();
 			});
 		}
 		else {
-			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel.Id).SendMessageAsync(embed: embed.Build());
+			await this._guild.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0).SendMessageAsync(embed: embed.Build());
 		}
 	}
 
@@ -276,7 +282,7 @@ public class DiscordBot {
 		embed.AddField("__Created__", $"{userCreated:dd.MM.yyyy HH:mm:ss}\n{this.FormatTimeSpan(userCreated)} ago");
 		embed.WithColorPink();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendUnbanNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon, DateTime userCreated) {
@@ -290,7 +296,7 @@ public class DiscordBot {
 		embed.AddField("__Created__", $"{userCreated:dd.MM.yyyy HH:mm:ss}\n{this.FormatTimeSpan(userCreated)} ago");
 		embed.WithColorLime();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);	}
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);	}
 
 	public async Task SendTimeoutNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon, DateTime userCreated, TimeSpan duration, string? reason = null) {
 		DiscordEmbedBuilder embed = new() {
@@ -306,7 +312,7 @@ public class DiscordBot {
 		embed.AddField("__Duration__", $"{duration.TotalSeconds} Seconds\n{this.ConvertTimeoutDuration(duration)}\n{this.ConvertTimeoutTime(duration)}");
 		embed.WithColorYellow();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendUntimeoutNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon, DateTime userCreated) {
@@ -320,7 +326,7 @@ public class DiscordBot {
 		embed.AddField("__Created__", $"{userCreated:dd.MM.yyyy HH:mm:ss}\n{this.FormatTimeSpan(userCreated)} ago");
 		embed.WithColorLime();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendMessageDeletedNotification (string channelName, string channelIcon, string deleterName, string deleterIcon, string userName, string userIcon, DateTime userCreated, string message) {
@@ -335,7 +341,7 @@ public class DiscordBot {
 		embed.AddField("__Created__", $"{userCreated:dd.MM.yyyy HH:mm:ss}\n{this.FormatTimeSpan(userCreated)} ago");
 		embed.WithColorPink();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendChatClearedNotification (string channelName, string channelIcon, string clearerName, string clearerIcon) {
@@ -346,7 +352,7 @@ public class DiscordBot {
 		};
 		embed.WithColorPink();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendSubscriberOnlyNotification (string channelName, string channelIcon, string modName, string modIcon, bool on) {
@@ -358,7 +364,7 @@ public class DiscordBot {
 		if (on) embed.WithColorPink();
 		else embed.WithColorLime();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendEmoteOnlyNotification (string channelName, string channelIcon, string modName, string modIcon, bool on) {
@@ -370,7 +376,7 @@ public class DiscordBot {
 		if (on) embed.WithColorYellow();
 		else embed.WithColorLime();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendR9kBetaNotification (string channelName, string channelIcon, string modName, string modIcon, bool on) {
@@ -382,7 +388,7 @@ public class DiscordBot {
 		if (on) embed.WithColorPurple();
 		else embed.WithColorLime();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel.Id, ConfigManager.Config.Discord.ModChannel.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	private string EscapeMessage (string text) {

@@ -3,6 +3,8 @@
 namespace Develeon64.RoboSushi.Util;
 
 public class DiscordEmbedBuilder : EmbedBuilder {
+	public static string BlankChar { get; } = "\u200b";
+
 	public DiscordEmbedBuilder (IUser? author = null) {
 		if (author != null) this.WithAuthor(author);
 		this.WithColorBlue();
@@ -11,7 +13,7 @@ public class DiscordEmbedBuilder : EmbedBuilder {
 	}
 
 	public DiscordEmbedBuilder AddBlankField (bool inline = false) {
-		this.AddField("\u200d", "\u200d", inline);
+		this.AddField(DiscordEmbedBuilder.BlankChar, DiscordEmbedBuilder.BlankChar, inline);
 		return this;
 	}
 

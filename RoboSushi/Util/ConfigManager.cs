@@ -26,8 +26,10 @@ public static class ConfigManager {
 	public static void Initialize (string? filePath = null) {
 		ConfigManager.confPath = filePath ?? ConfigManager.confPath;
 		ConfigManager.authPath = filePath ?? ConfigManager.authPath;
-		ConfigManager.Config = JToken.Parse(File.ReadAllText(ConfigManager.confPath)).ToObject<AppConfig>();
-		ConfigManager.Auth = JToken.Parse(File.ReadAllText(ConfigManager.authPath)).ToObject<AuthConfig>();
+		//ConfigManager.Config = JToken.Parse(File.ReadAllText(ConfigManager.confPath)).ToObject<AppConfig>();
+		ConfigManager.Config = JsonConvert.DeserializeObject<AppConfig>(File.ReadAllText(ConfigManager.confPath, Encoding.UTF8), JsonSettings);
+		//ConfigManager.Auth = JToken.Parse(File.ReadAllText(ConfigManager.authPath)).ToObject<AuthConfig>();
+		ConfigManager.Auth = JsonConvert.DeserializeObject<AuthConfig>(File.ReadAllText(ConfigManager.authPath, Encoding.UTF8), JsonSettings);
 		ConfigManager.Db = JsonConvert.DeserializeObject<AppDb>(File.ReadAllText("Var/DB/" + "Database.json"), JsonSettings);
 		AppDb.WriteFile();
 	}
