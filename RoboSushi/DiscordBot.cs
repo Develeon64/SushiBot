@@ -282,7 +282,7 @@ public class DiscordBot {
 		embed.AddField("__Created__", $"{userCreated:dd.MM.yyyy HH:mm:ss}\n{this.FormatTimeSpan(userCreated)} ago");
 		embed.WithColorPink();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync($"**BAN**\n<@&{String.Join("> <@&", ConfigManager.Config.Discord.ModRoles)}>", embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync($"__**BAN**: {userName}__\n<@&{String.Join("> <@&", ConfigManager.Config.Discord.ModRoles)}>", embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendUnbanNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon, DateTime userCreated) {
@@ -312,7 +312,7 @@ public class DiscordBot {
 		embed.AddField("__Duration__", $"{duration.TotalSeconds} Seconds\n{this.ConvertTimeoutDuration(duration)}\n{this.ConvertTimeoutTime(duration)}");
 		embed.WithColorYellow();
 
-		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync($"**BAN**\n<@&{String.Join("> <@&", ConfigManager.Config.Discord.ModRoles)}>", embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
+		await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0, ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync($"__**TIMEOUT**: {userName}__\n<@&{String.Join("> <@&", ConfigManager.Config.Discord.ModRoles)}>", embeds: new List<Embed>() { embed.Build() }, username: channelName, avatarUrl: channelIcon);
 	}
 
 	public async Task SendUntimeoutNotification (string channelName, string channelIcon, string bannerName, string bannerIcon, string userName, string userIcon, DateTime userCreated) {
