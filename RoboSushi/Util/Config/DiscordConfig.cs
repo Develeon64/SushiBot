@@ -34,6 +34,9 @@ public struct DiscordConfig {
 	[JsonProperty]
 	public ulong[]? AdminRoles { get; set; }
 
+	[JsonProperty]
+	public ulong[]? ModRoles { get; set; }
+
 	[JsonIgnore]
 	public int ReadyWait {
 		get => this.readyWait;
