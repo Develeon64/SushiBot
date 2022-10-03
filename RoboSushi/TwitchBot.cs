@@ -63,7 +63,7 @@ public partial class TwitchBot {
 		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.BannedUserId })).Users[0];
 		string userName = user.DisplayName;
 		string userIcon = this.EncodeImageUrl(user.ProfileImageUrl);
-		DateTime userCreated = user.CreatedAt;
+		DateTime userCreated = user.CreatedAt.AddHours(2);
 
 		await RoboSushi.discordBot.SendBanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated, e.BanReason);
 	}
@@ -78,7 +78,7 @@ public partial class TwitchBot {
 		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.UnbannedUserId })).Users[0];
 		string userName = user.DisplayName;
 		string userIcon = this.EncodeImageUrl(user.ProfileImageUrl);
-		DateTime userCreated = user.CreatedAt;
+		DateTime userCreated = user.CreatedAt.AddHours(2);
 
 		await RoboSushi.discordBot.SendUnbanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated);
 	}
@@ -93,7 +93,7 @@ public partial class TwitchBot {
 		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.TimedoutUserId })).Users[0];
 		string userName = user.DisplayName;
 		string userIcon = this.EncodeImageUrl(user.ProfileImageUrl);
-		DateTime userCreated = user.CreatedAt;
+		DateTime userCreated = user.CreatedAt.AddHours(2);
 
 		await RoboSushi.discordBot.SendTimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated, e.TimeoutDuration, e.TimeoutReason);
 	}
@@ -108,7 +108,7 @@ public partial class TwitchBot {
 		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.UntimeoutedUserId })).Users[0];
 		string userName = user.DisplayName;
 		string userIcon = this.EncodeImageUrl(user.ProfileImageUrl);
-		DateTime userCreated = user.CreatedAt;
+		DateTime userCreated = user.CreatedAt.AddHours(2);
 
 		await RoboSushi.discordBot.SendUntimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated);
 	}
@@ -131,7 +131,7 @@ public partial class TwitchBot {
 		var user = (await this._api.Helix.Users.GetUsersAsync(ids: new() { e.TargetUserId })).Users[0];
 		string userName = user.DisplayName;
 		string userIcon = this.EncodeImageUrl(user.ProfileImageUrl);
-		DateTime userCreated = user.CreatedAt;
+		DateTime userCreated = user.CreatedAt.AddHours(2);
 
 		await RoboSushi.discordBot.SendMessageDeletedNotification(channelName, channelIcon, deleterName, deleterIcon, userName, userIcon, userCreated, e.Message);
 	}
