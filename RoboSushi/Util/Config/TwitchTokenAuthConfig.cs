@@ -1,10 +1,21 @@
-﻿using TwitchLib.Api.Core.Enums;
+﻿using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
+using TwitchLib.Api.Core.Enums;
 
 namespace Develeon64.RoboSushi.Util.Config;
 
+[JsonObject(
+	ItemRequired = Required.DisallowNull,
+	MemberSerialization = MemberSerialization.OptIn,
+	NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
 public struct TwitchTokenAuthConfig {
+	[JsonProperty]
 	public string Access { get; set; }
+
+	[JsonProperty]
 	public string Refresh { get; set; }
+
+	[JsonProperty]
 	public string[] Scopes { get; set; }
 
 	public List<AuthScopes> GetScopes () {
