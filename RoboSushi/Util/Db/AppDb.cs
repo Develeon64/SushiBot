@@ -5,22 +5,16 @@ using System.Text;
 namespace Develeon64.RoboSushi.Util.Db;
 
 [JsonObject(
-	ItemRequired = Required.DisallowNull,
-	MemberSerialization = MemberSerialization.OptIn,
-	NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
-public class AppDb {
-	private DiscordDb _discord;
+    ItemRequired = Required.DisallowNull,
+    MemberSerialization = MemberSerialization.OptIn,
+    NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
+public class AppDb
+{
+    [JsonProperty]
+    public ulong notify_message_id { get; set; }
 
-	[JsonProperty]
-	public DiscordDb Discord {
-		get => this._discord;
-		set {
-			this._discord = value;
-			AppDb.WriteFile();
-		}
-	}
-
-	public static void WriteFile () {
-		File.WriteAllText("Var/DB/" + "Database.json", JsonConvert.SerializeObject(ConfigManager.Db, ConfigManager.JsonSettings), Encoding.UTF8);
-	}
+    public static void WriteFile()
+    {
+        File.WriteAllText("Var/DB/" + "Database.json", JsonConvert.SerializeObject(ConfigManager.Db, ConfigManager.JsonSettings), Encoding.UTF8);
+    }
 }
