@@ -25,20 +25,6 @@ public partial class TwitchBot
 
     private async void Client_MessageReceived(object? sender, OnMessageReceivedArgs e)
     {
-        Console.WriteLine(" went live!");
-        await Task.Delay(30000);
-
-        var info = await this._api.Helix.Streams.GetStreamsAsync(userIds: new() { "28213443" });
-        if (info != null && info.Streams != null && info.Streams.Length >= 1)
-        {
-            var stream = info.Streams[0];
-            string userIcon = (await this._api.Helix.Users.GetUsersAsync(ids: new() { stream.UserId })).Users[0].ProfileImageUrl;
-            string gameThumbnail = this.EncodeImageUrl((await this._api.Helix.Games.GetGamesAsync(gameIds: new() { stream.GameId })).Games[0].BoxArtUrl);
-            await RoboSushi.DiscordBot.SendLiveNotification(stream.UserName, stream.GameName, stream.Title, stream.StartedAt, stream.ViewerCount, stream.Language, stream.IsMature, $"{stream.Type.Substring(0, 1).ToUpper()}{stream.Type.Substring(1)}", this.EncodeImageUrl(stream.ThumbnailUrl), gameThumbnail, userIcon);
-        }
-
-        await RoboSushi.DiscordBot.UpdateMemberCount();
-
         Console.WriteLine("New Message from " + e.ChatMessage.DisplayName + "\n" + e.ChatMessage.Message);
     }
 
