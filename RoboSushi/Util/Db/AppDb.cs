@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System.Text;
 
 namespace Develeon64.RoboSushi.Util.Db;
 
@@ -10,11 +10,11 @@ namespace Develeon64.RoboSushi.Util.Db;
     NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
 public class AppDb
 {
-    [JsonProperty]
-    public ulong notify_message_id { get; set; }
+    [JsonProperty] public ulong NotifyMessageId { get; set; }
 
     public static void WriteFile()
     {
-        File.WriteAllText("Var/DB/" + "Database.json", JsonConvert.SerializeObject(ConfigManager.Db, ConfigManager.JsonSettings), Encoding.UTF8);
+        File.WriteAllText("Var/DB/" + "Database.json",
+            JsonConvert.SerializeObject(ConfigManager.Db, ConfigManager.JsonSettings), Encoding.UTF8);
     }
 }

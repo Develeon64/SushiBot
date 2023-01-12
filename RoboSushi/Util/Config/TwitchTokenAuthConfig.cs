@@ -10,20 +10,17 @@ namespace Develeon64.RoboSushi.Util.Config;
     NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
 public struct TwitchTokenAuthConfig
 {
-    [JsonProperty]
-    public string Access { get; set; }
+    [JsonProperty] public string Access { get; set; }
 
-    [JsonProperty]
-    public string Refresh { get; set; }
+    [JsonProperty] public string Refresh { get; set; }
 
-    [JsonProperty]
-    public string[] Scopes { get; set; }
+    [JsonProperty] public string[] Scopes { get; set; }
 
     public List<AuthScopes> GetScopes()
     {
         List<AuthScopes> scopes = new();
 
-        foreach (string scope in this.Scopes)
+        foreach (var scope in Scopes)
         {
             switch (scope)
             {
@@ -181,8 +178,8 @@ public struct TwitchTokenAuthConfig
 
             if (scopes.Count == 0)
                 scopes.Add(AuthScopes.None);
-
         }
+
         return scopes;
     }
 }

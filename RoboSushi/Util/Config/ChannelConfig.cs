@@ -9,12 +9,9 @@ namespace Develeon64.RoboSushi.Util.Config;
     NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
 public struct ChannelConfig
 {
-    [JsonProperty]
-    public ulong Id { get; set; }
+    [JsonProperty] public ulong Id { get; set; }
 
-    [JsonProperty]
-    public ulong? MessageId { get; set; }
+    [JsonProperty] public ulong? MessageId { get; set; }
 
-    [JsonProperty]
-    public string? Token { get; set; }
+    [JsonProperty] public string? Token { get; set; }
 }

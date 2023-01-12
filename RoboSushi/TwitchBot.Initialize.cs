@@ -1,5 +1,6 @@
 ﻿using Develeon64.RoboSushi.Util;
 using TwitchLib.Client.Events;
+using TwitchLib.Client.Models;
 using TwitchLib.PubSub.Events;
 
 namespace Develeon64.RoboSushi;
@@ -10,69 +11,74 @@ public partial class TwitchBot
 
     private async void Initialize()
     {
-        await this.InitializeApi();
-        this.InitializeClient();
-        this.InitializePubSub();
+        await InitializeApi();
+        InitializeClient();
+        InitializePubSub();
 
-        this._client.Connect();
-        this._pubsub.Connect();
+        _client.Connect();
+        _pubsub.Connect();
     }
 
     private async Task InitializeApi()
     {
-        this._api.Settings.ClientId = ConfigManager.Auth.Twitch.Client.Id;
-        this._api.Settings.Secret = ConfigManager.Auth.Twitch.Client.Secret;
-        this._api.Settings.AccessToken = ConfigManager.Auth.Twitch.Bot.Access;
-        this._api.Settings.Scopes = ConfigManager.Auth.Twitch.Bot.GetScopes();
+        _api.Settings.ClientId = ConfigManager.Auth.Twitch.Client.Id;
+        _api.Settings.Secret = ConfigManager.Auth.Twitch.Client.Secret;
+        _api.Settings.AccessToken = ConfigManager.Auth.Twitch.Bot.Access;
+        _api.Settings.Scopes = ConfigManager.Auth.Twitch.Bot.GetScopes();
 
-        this._tokenTimer.Change(30000, 300000);
-        await this.CheckTokens(true);
+        _tokenTimer.Change(30000, 300000);
+        await CheckTokens(true);
 
-        this._channel = (await this._api.Helix.Users.GetUsersAsync(logins: new() { ConfigManager.Config.Twitch.Channel })).Users[0];
-        this._moderator = (await this._api.Helix.Users.GetUsersAsync(logins: new() { ConfigManager.Config.Twitch.Username })).Users[0];
+        _channel = (await _api.Helix.Users.GetUsersAsync(logins: new List<string>
+            { ConfigManager.Config.Twitch.Channel })).Users[0];
+        _moderator =
+            (await _api.Helix.Users.GetUsersAsync(logins: new List<string> { ConfigManager.Config.Twitch.Username }))
+            .Users[0];
     }
 
     private void InitializeClient()
     {
-        this._client.Initialize(new(ConfigManager.Config.Twitch.Username, ConfigManager.Auth.Twitch.Bot.Access), ConfigManager.Config.Twitch.Channel);
+        _client.Initialize(
+            new ConnectionCredentials(ConfigManager.Config.Twitch.Username, ConfigManager.Auth.Twitch.Bot.Access),
+            ConfigManager.Config.Twitch.Channel);
 
-        this._client.OnConnected += this.Client_Connected;
-        this._client.OnJoinedChannel += this.Client_JoinedChannel;
+        _client.OnConnected += Client_Connected;
+        _client.OnJoinedChannel += Client_JoinedChannel;
 
-        this._client.OnMessageSent += this.Client_MessageSent;
-        this._client.OnMessageReceived += this.Client_MessageReceived;
+        _client.OnMessageSent += Client_MessageSent;
+        _client.OnMessageReceived += Client_MessageReceived;
     }
 
     private void InitializePubSub()
     {
-        this._pubsub.OnPubSubServiceConnected += this.PubSub_ServiceConnected;
-        this._pubsub.OnListenResponse += this.PubSub_ListenResponse;
+        _pubsub.OnPubSubServiceConnected += PubSub_ServiceConnected;
+        _pubsub.OnListenResponse += PubSub_ListenResponse;
 
-        this._pubsub.OnStreamUp += this.PubSub_StreamUp;
-        this._pubsub.OnStreamDown += this.PubSub_StreamDown;
+        _pubsub.OnStreamUp += PubSub_StreamUp;
+        _pubsub.OnStreamDown += PubSub_StreamDown;
 
-        this._pubsub.OnBan += this.PubSub_Ban;
-        this._pubsub.OnUnban += this.PubSub_Unban;
-        this._pubsub.OnTimeout += this.PubSub_Timeout;
-        this._pubsub.OnUntimeout += this.PubSub_Untimeout;
+        _pubsub.OnBan += PubSub_Ban;
+        _pubsub.OnUnban += PubSub_Unban;
+        _pubsub.OnTimeout += PubSub_Timeout;
+        _pubsub.OnUntimeout += PubSub_Untimeout;
 
         /*this._pubsub.OnAutomodCaughtMessage += this.PubSub_AutomodCaughtMessage;
 		this._pubsub.OnAutomodCaughtUserMessage += this.PubSub_AutomodCaughtUserMessage;*/
 
-        this._pubsub.OnMessageDeleted += this.PubSub_MessageDeleted;
-        this._pubsub.OnClear += this.PubSub_Clear;
+        _pubsub.OnMessageDeleted += PubSub_MessageDeleted;
+        _pubsub.OnClear += PubSub_Clear;
 
-        this._pubsub.OnSubscribersOnly += this.PubSub_SubscribersOnly;
-        this._pubsub.OnSubscribersOnlyOff += this.PubSub_SubscribersOnlyOff;
-        this._pubsub.OnEmoteOnly += this.PubSub_EmoteOnly;
-        this._pubsub.OnEmoteOnlyOff += this.PubSub_EmoteOnlyOff;
-        this._pubsub.OnR9kBeta += this.PubSub_R9kBeta;
-        this._pubsub.OnR9kBetaOff += this.PubSub_R9kBetaOff;
+        _pubsub.OnSubscribersOnly += PubSub_SubscribersOnly;
+        _pubsub.OnSubscribersOnlyOff += PubSub_SubscribersOnlyOff;
+        _pubsub.OnEmoteOnly += PubSub_EmoteOnly;
+        _pubsub.OnEmoteOnlyOff += PubSub_EmoteOnlyOff;
+        _pubsub.OnR9kBeta += PubSub_R9kBeta;
+        _pubsub.OnR9kBetaOff += PubSub_R9kBetaOff;
     }
 
     private async void TokenTimer_Tick(object? stateInfo)
     {
-        await this.CheckTokens();
+        await CheckTokens();
     }
 
     private void Client_JoinedChannel(object? sender, OnJoinedChannelArgs e)
@@ -92,21 +98,21 @@ public partial class TwitchBot
         ////this._pubsub.ListenToChannelExtensionBroadcast(this._channel?.Id, this._extension?.Id);
         ////this._pubsub.ListenToRewards(this._channel?.Id);
 
-        this._pubsub.ListenToBitsEventsV2(this._channel?.Id);
-        this._pubsub.ListenToChannelPoints(this._channel?.Id);
-        this._pubsub.ListenToFollows(this._channel?.Id);
-        this._pubsub.ListenToLeaderboards(this._channel?.Id);
-        this._pubsub.ListenToPredictions(this._channel?.Id);
-        this._pubsub.ListenToRaid(this._channel?.Id);
-        this._pubsub.ListenToSubscriptions(this._channel?.Id);
-        this._pubsub.ListenToVideoPlayback(this._channel?.Id);
-        this._pubsub.ListenToWhispers(this._channel?.Id);
-        this._pubsub.SendTopics(ConfigManager.Auth.Twitch.Channel.Access);
+        _pubsub.ListenToBitsEventsV2(_channel?.Id);
+        _pubsub.ListenToChannelPoints(_channel?.Id);
+        _pubsub.ListenToFollows(_channel?.Id);
+        _pubsub.ListenToLeaderboards(_channel?.Id);
+        _pubsub.ListenToPredictions(_channel?.Id);
+        _pubsub.ListenToRaid(_channel?.Id);
+        _pubsub.ListenToSubscriptions(_channel?.Id);
+        _pubsub.ListenToVideoPlayback(_channel?.Id);
+        _pubsub.ListenToWhispers(_channel?.Id);
+        _pubsub.SendTopics(ConfigManager.Auth.Twitch.Channel.Access);
 
-        this._pubsub.ListenToAutomodQueue(this._moderator?.Id, this._channel?.Id);
-        this._pubsub.ListenToChatModeratorActions(this._moderator?.Id, this._channel?.Id);
-        this._pubsub.ListenToUserModerationNotifications(this._moderator?.Id, this._channel?.Id);
-        this._pubsub.SendTopics(ConfigManager.Auth.Twitch.Bot.Access);
+        _pubsub.ListenToAutomodQueue(_moderator?.Id, _channel?.Id);
+        _pubsub.ListenToChatModeratorActions(_moderator?.Id, _channel?.Id);
+        _pubsub.ListenToUserModerationNotifications(_moderator?.Id, _channel?.Id);
+        _pubsub.SendTopics(ConfigManager.Auth.Twitch.Bot.Access);
 
         //Thread.Sleep(30000);
         //this.PubSub_StreamUp(null, new() { ChannelId = this._channel?.Id });

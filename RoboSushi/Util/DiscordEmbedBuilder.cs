@@ -4,19 +4,20 @@ namespace Develeon64.RoboSushi.Util;
 
 public class DiscordEmbedBuilder : EmbedBuilder
 {
-    public static string BlankChar { get; } = "\u200b";
-
     public DiscordEmbedBuilder(IUser? author = null)
     {
         if (author != null) this.WithAuthor(author);
-        this.WithColorBlue();
-        this.WithCurrentTimestamp();
-        this.WithFooter("Develeon64", "https://cdn.discordapp.com/attachments/344276509567090689/975281528173121606/Chrishi_Blurple-Dark.png");
+        WithColorBlue();
+        WithCurrentTimestamp();
+        WithFooter("Develeon64",
+            "https://cdn.discordapp.com/attachments/344276509567090689/975281528173121606/Chrishi_Blurple-Dark.png");
     }
+
+    public static string BlankChar { get; } = "\u200b";
 
     public DiscordEmbedBuilder AddBlankField(bool inline = false)
     {
-        this.AddField(DiscordEmbedBuilder.BlankChar, DiscordEmbedBuilder.BlankChar, inline);
+        AddField(BlankChar, BlankChar, inline);
         return this;
     }
 

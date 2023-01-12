@@ -9,9 +9,7 @@ namespace Develeon64.RoboSushi.Util.Config;
     NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
 public struct TwitchConfig
 {
-    [JsonProperty]
-    public string Username { get; set; }
+    [JsonProperty] public string Username { get; set; }
 
-    [JsonProperty]
-    public string Channel { get; set; }
+    [JsonProperty] public string Channel { get; set; }
 }

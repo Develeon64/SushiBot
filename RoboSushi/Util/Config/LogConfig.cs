@@ -7,4 +7,6 @@ namespace Develeon64.RoboSushi.Util.Config;
     ItemRequired = Required.DisallowNull,
     MemberSerialization = MemberSerialization.OptIn,
     NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
-public struct LogConfig { }
+public struct LogConfig
+{
+}

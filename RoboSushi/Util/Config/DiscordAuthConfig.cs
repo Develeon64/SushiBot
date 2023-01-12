@@ -9,21 +9,15 @@ namespace Develeon64.RoboSushi.Util.Config;
     NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
 public struct DiscordAuthConfig
 {
-    [JsonProperty]
-    public ulong Id { get; set; }
+    [JsonProperty] public ulong Id { get; set; }
 
-    [JsonProperty]
-    public string Key { get; set; }
+    [JsonProperty] public string Key { get; set; }
 
-    [JsonProperty]
-    public string Secret { get; set; }
+    [JsonProperty] public string Secret { get; set; }
 
-    [JsonProperty]
-    public string Token { get; set; }
+    [JsonProperty] public string Token { get; set; }
 
-    [JsonProperty]
-    public string Username { get; set; }
+    [JsonProperty] public string Username { get; set; }
 
-    [JsonProperty]
-    public int Discriminator { get; set; }
+    [JsonProperty] public int Discriminator { get; set; }
 }

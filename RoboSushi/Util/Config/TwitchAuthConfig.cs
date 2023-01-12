@@ -9,12 +9,9 @@ namespace Develeon64.RoboSushi.Util.Config;
     NamingStrategyType = typeof(SnakeCaseNamingStrategy))]
 public struct TwitchAuthConfig
 {
-    [JsonProperty]
-    public TwitchClientAuthConfig Client { get; set; }
+    [JsonProperty] public TwitchClientAuthConfig Client { get; set; }
 
-    [JsonProperty]
-    public TwitchTokenAuthConfig Channel { get; set; }
+    [JsonProperty] public TwitchTokenAuthConfig Channel { get; set; }
 
-    [JsonProperty]
-    public TwitchTokenAuthConfig Bot { get; set; }
+    [JsonProperty] public TwitchTokenAuthConfig Bot { get; set; }
 }
