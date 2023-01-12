@@ -333,12 +333,12 @@ public class DiscordBot
             await SendDiscordStreamNotification(embed);
     }
 
-    public async Task SendDiscordStreamNotification(DiscordEmbedBuilder embed, string? everyone = null)
+    public async Task SendDiscordStreamNotification(DiscordEmbedBuilder embed, string everyone = "")
     {
         var channel = _guild?.GetTextChannel(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0);
         var messageId = ConfigManager.Db.NotifyMessageId;
         if (messageId is not 0) await channel?.DeleteMessageAsync(messageId)!;
-        var message = await channel?.SendMessageAsync(everyone, embed: embed.Build())!;
+        var message = await channel?.SendMessageAsync(text: everyone, embed: embed.Build())!;
         ConfigManager.Db.NotifyMessageId = message.Id;
         AppDb.WriteFile();
     }
