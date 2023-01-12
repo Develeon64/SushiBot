@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using TwitchLib.Api.Core.Enums;
 
 namespace Develeon64.RoboSushi.Util.Config;

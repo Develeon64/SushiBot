@@ -5,18 +5,18 @@ namespace Develeon64.RoboSushi;
 
 public class RoboSushi
 {
-	public static DiscordBot? DiscordBot;
-	public static TwitchBot? TwitchBot;
+    public static DiscordBot? DiscordBot;
+    public static TwitchBot? TwitchBot;
 
-	public static void Main() { MainAsync().GetAwaiter().GetResult(); }
+    public static void Main() { MainAsync().GetAwaiter().GetResult(); }
 
-	public static async Task MainAsync()
-	{
-		ConfigManager.Initialize();
+    public static async Task MainAsync()
+    {
+        ConfigManager.Initialize();
 
         DiscordBot = new();
         TwitchBot = new();
 
-		await Task.Delay(-1);
-	}
+        await Task.Delay(-1);
+    }
 }

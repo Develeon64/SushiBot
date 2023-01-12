@@ -8,68 +8,68 @@ namespace Develeon64.RoboSushi.Util;
 
 public static class ConfigManager
 {
-	private static string confPath = "Var/Config/Configuration.jsonc";
-	private static string authPath = "Var/Config/Authentification.jsonc";
-	private static string dbPath = "Var/DB/Database.json";
+    private static string confPath = "Var/Config/Configuration.jsonc";
+    private static string authPath = "Var/Config/Authentification.jsonc";
+    private static string dbPath = "Var/DB/Database.json";
 
-	public static JsonSerializerSettings JsonSettings { get; } = new()
-	{
-		DefaultValueHandling = DefaultValueHandling.Populate,
-		FloatFormatHandling = FloatFormatHandling.DefaultValue,
-		Formatting = Formatting.None,
-		StringEscapeHandling = StringEscapeHandling.EscapeNonAscii,
-	};
+    public static JsonSerializerSettings JsonSettings { get; } = new()
+    {
+        DefaultValueHandling = DefaultValueHandling.Populate,
+        FloatFormatHandling = FloatFormatHandling.DefaultValue,
+        Formatting = Formatting.None,
+        StringEscapeHandling = StringEscapeHandling.EscapeNonAscii,
+    };
 
-	public static AppConfig Config { get; set; }
-	public static AuthConfig Auth { get; set; }
-	public static AppDb Db { get; set; }
+    public static AppConfig Config { get; set; }
+    public static AuthConfig Auth { get; set; }
+    public static AppDb Db { get; set; }
 
-	public static void Initialize(string? filePath = null)
-	{
-		ConfigManager.confPath = filePath ?? ConfigManager.confPath;
-		ConfigManager.authPath = filePath ?? ConfigManager.authPath;
-		//ConfigManager.Config = JToken.Parse(File.ReadAllText(ConfigManager.confPath)).ToObject<AppConfig>();
-		ConfigManager.Config = JsonConvert.DeserializeObject<AppConfig>(File.ReadAllText(ConfigManager.confPath, Encoding.UTF8), JsonSettings);
-		//ConfigManager.Auth = JToken.Parse(File.ReadAllText(ConfigManager.authPath)).ToObject<AuthConfig>();
-		ConfigManager.Auth = JsonConvert.DeserializeObject<AuthConfig>(File.ReadAllText(ConfigManager.authPath, Encoding.UTF8), JsonSettings);
-		ConfigManager.Db = JsonConvert.DeserializeObject<AppDb>(File.ReadAllText(ConfigManager.dbPath, Encoding.UTF8), JsonSettings);
-		AppDb.WriteFile();
-	}
+    public static void Initialize(string? filePath = null)
+    {
+        ConfigManager.confPath = filePath ?? ConfigManager.confPath;
+        ConfigManager.authPath = filePath ?? ConfigManager.authPath;
+        //ConfigManager.Config = JToken.Parse(File.ReadAllText(ConfigManager.confPath)).ToObject<AppConfig>();
+        ConfigManager.Config = JsonConvert.DeserializeObject<AppConfig>(File.ReadAllText(ConfigManager.confPath, Encoding.UTF8), JsonSettings);
+        //ConfigManager.Auth = JToken.Parse(File.ReadAllText(ConfigManager.authPath)).ToObject<AuthConfig>();
+        ConfigManager.Auth = JsonConvert.DeserializeObject<AuthConfig>(File.ReadAllText(ConfigManager.authPath, Encoding.UTF8), JsonSettings);
+        ConfigManager.Db = JsonConvert.DeserializeObject<AppDb>(File.ReadAllText(ConfigManager.dbPath, Encoding.UTF8), JsonSettings);
+        AppDb.WriteFile();
+    }
 
-	public static void RefreshTwitchBotTokens(string accessToken, string refreshToken, int? expiresIn = 0)
-	{
-		var auth = ConfigManager.Auth;
-		var twitch = auth.Twitch;
-		var bot = twitch.Bot;
+    public static void RefreshTwitchBotTokens(string accessToken, string refreshToken, int? expiresIn = 0)
+    {
+        var auth = ConfigManager.Auth;
+        var twitch = auth.Twitch;
+        var bot = twitch.Bot;
 
-		bot.Access = accessToken;
-		bot.Refresh = refreshToken;
+        bot.Access = accessToken;
+        bot.Refresh = refreshToken;
 
-		twitch.Bot = bot;
-		auth.Twitch = twitch;
-		ConfigManager.Auth = auth;
+        twitch.Bot = bot;
+        auth.Twitch = twitch;
+        ConfigManager.Auth = auth;
 
-		ConfigManager.WriteAuthFile();
-	}
+        ConfigManager.WriteAuthFile();
+    }
 
-	public static void RefreshTwitchChannelTokens(string accessToken, string refreshToken, int? expiresIn = 0)
-	{
-		var auth = ConfigManager.Auth;
-		var twitch = auth.Twitch;
-		var channel = twitch.Channel;
+    public static void RefreshTwitchChannelTokens(string accessToken, string refreshToken, int? expiresIn = 0)
+    {
+        var auth = ConfigManager.Auth;
+        var twitch = auth.Twitch;
+        var channel = twitch.Channel;
 
-		channel.Access = accessToken;
-		channel.Refresh = refreshToken;
+        channel.Access = accessToken;
+        channel.Refresh = refreshToken;
 
-		twitch.Channel = channel;
-		auth.Twitch = twitch;
-		ConfigManager.Auth = auth;
+        twitch.Channel = channel;
+        auth.Twitch = twitch;
+        ConfigManager.Auth = auth;
 
-		ConfigManager.WriteAuthFile();
-	}
+        ConfigManager.WriteAuthFile();
+    }
 
-	private static void WriteAuthFile()
-	{
-		File.WriteAllText(ConfigManager.authPath, JObject.FromObject(ConfigManager.Auth).ToString(Formatting.Indented), Encoding.UTF8);
-	}
+    private static void WriteAuthFile()
+    {
+        File.WriteAllText(ConfigManager.authPath, JObject.FromObject(ConfigManager.Auth).ToString(Formatting.Indented), Encoding.UTF8);
+    }
 }
