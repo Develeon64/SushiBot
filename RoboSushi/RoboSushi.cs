@@ -3,18 +3,20 @@ using Develeon64.RoboSushi.Util;
 
 namespace Develeon64.RoboSushi;
 
-public class RoboSushi {
-	public static DiscordBot discordBot;
-	public static TwitchBot twitchBot;
+public class RoboSushi
+{
+	public static DiscordBot? DiscordBot;
+	public static TwitchBot? TwitchBot;
 
-	public static void Main (string[] args) { RoboSushi.MainAsync(args).GetAwaiter().GetResult(); }
+	public static void Main() { MainAsync().GetAwaiter().GetResult(); }
 
-	public static async Task MainAsync (string[] args) {
+	public static async Task MainAsync()
+	{
 		ConfigManager.Initialize();
 
-		RoboSushi.discordBot = new();
-		RoboSushi.twitchBot = new();
-		
+        DiscordBot = new();
+        TwitchBot = new();
+
 		await Task.Delay(-1);
 	}
 }

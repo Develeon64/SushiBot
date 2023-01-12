@@ -17,4 +17,16 @@
     <PackageReference Include="VerboseTimespan" Version="1.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Var\Config\Authentification.jsonc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Var\Config\Configuration.jsonc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Var\DB\Database.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
