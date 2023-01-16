@@ -1,8 +1,9 @@
 ﻿using System.Text;
+using Dietze.helper;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Develeon64.RoboSushi.Util.Db;
+namespace Dietze.Utils.Db;
 
 [JsonObject(
     ItemRequired = Required.DisallowNull,
@@ -14,7 +15,6 @@ public class AppDb
 
     public static void WriteFile()
     {
-        File.WriteAllText("Var/DB/" + "Database.json",
-            JsonConvert.SerializeObject(ConfigManager.Db, ConfigManager.JsonSettings), Encoding.UTF8);
+        File.WriteAllText("Var/DB/Database.json", JsonConvert.SerializeObject(ConfigManager.Db, ConfigManager.JsonSettings), Encoding.UTF8);
     }
 }

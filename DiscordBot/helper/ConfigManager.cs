@@ -1,10 +1,11 @@
 ﻿using System.Text;
-using Develeon64.RoboSushi.Util.Config;
-using Develeon64.RoboSushi.Util.Db;
 using Newtonsoft.Json;
+
+using Dietze.Utils.Config;
+using Dietze.Utils.Db;
 using Newtonsoft.Json.Linq;
 
-namespace Develeon64.RoboSushi.Util;
+namespace Dietze.helper;
 
 public static class ConfigManager
 {
@@ -26,12 +27,9 @@ public static class ConfigManager
 
     public static void Initialize(string? filePath = null)
     {
-        //ConfigManager.Config = JToken.Parse(File.ReadAllText(ConfigManager.confPath)).ToObject<AppConfig>();
         Config = JsonConvert.DeserializeObject<AppConfig>(File.ReadAllText(ConfPath, Encoding.UTF8), JsonSettings);
-        //ConfigManager.Auth = JToken.Parse(File.ReadAllText(ConfigManager.authPath)).ToObject<AuthConfig>();
         Auth = JsonConvert.DeserializeObject<AuthConfig>(File.ReadAllText(AuthPath, Encoding.UTF8), JsonSettings);
         Db = JsonConvert.DeserializeObject<AppDb>(File.ReadAllText(dbPath, Encoding.UTF8), JsonSettings);
-        AppDb.WriteFile();
     }
 
     public static void RefreshTwitchBotTokens(string accessToken, string refreshToken, int? expiresIn = 0)

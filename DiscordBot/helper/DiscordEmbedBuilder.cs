@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace Develeon64.RoboSushi.Util;
+namespace Dietze.helper;
 
 public class DiscordEmbedBuilder : EmbedBuilder
 {
@@ -9,8 +9,8 @@ public class DiscordEmbedBuilder : EmbedBuilder
         if (author != null) this.WithAuthor(author);
         WithColorBlue();
         WithCurrentTimestamp();
-        WithFooter("Develeon64",
-            "https://cdn.discordapp.com/attachments/344276509567090689/975281528173121606/Chrishi_Blurple-Dark.png");
+        WithFooter("Dietze_",
+            "https://www.pngmart.com/files/21/Funny-PNG-Isolated-HD-Pictures.png");
     }
 
     public static string BlankChar { get; } = "\u200b";

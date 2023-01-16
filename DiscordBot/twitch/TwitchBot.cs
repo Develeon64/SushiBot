@@ -1,5 +1,4 @@
-﻿using Develeon64.RoboSushi.Util;
-using TwitchLib.Api;
+﻿using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
@@ -7,7 +6,14 @@ using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
 using OnEmoteOnlyArgs = TwitchLib.PubSub.Events.OnEmoteOnlyArgs;
 
-namespace Develeon64.RoboSushi;
+using Dietze.Discord;
+using Dietze.helper;
+using Newtonsoft.Json.Linq;
+using Dietze.Utils.Config;
+using TwitchLib.Client.Models;
+using System.Threading;
+
+namespace Dietze.Twitch;
 
 public partial class TwitchBot
 {
@@ -18,14 +24,55 @@ public partial class TwitchBot
     private User? _channel;
     private User? _moderator;
 
-    public TwitchBot()
+    private void Client_JoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
-        _tokenTimer = new Timer(TokenTimer_Tick, null, Timeout.Infinite, 300000);
-        Initialize();
+        Console.WriteLine("Joined channel " + e.Channel);
     }
 
-    private static void Client_MessageReceived(object? sender, OnMessageReceivedArgs e)
+    private void Client_Connected(object? sender, OnConnectedArgs e)
     {
+        Console.WriteLine("Twitch connected as " + e.BotUsername);
+    }
+
+    private void PubSub_ServiceConnected(object? sender, EventArgs e)
+    {
+        Console.WriteLine("PubSub connected!");
+
+        _pubsub.ListenToBitsEventsV2(_channel?.Id);
+        _pubsub.ListenToChannelPoints(_channel?.Id);
+        _pubsub.ListenToFollows(_channel?.Id);
+        _pubsub.ListenToLeaderboards(_channel?.Id);
+        _pubsub.ListenToPredictions(_channel?.Id);
+        _pubsub.ListenToRaid(_channel?.Id);
+        _pubsub.ListenToSubscriptions(_channel?.Id);
+        _pubsub.ListenToVideoPlayback(_channel?.Id);
+        _pubsub.ListenToWhispers(_channel?.Id);
+        _pubsub.SendTopics(ConfigManager.Auth.Twitch.Channel.Access);
+
+        _pubsub.ListenToAutomodQueue(_moderator?.Id, _channel?.Id);
+        _pubsub.ListenToChatModeratorActions(_moderator?.Id, _channel?.Id);
+        _pubsub.ListenToUserModerationNotifications(_moderator?.Id, _channel?.Id);
+        _pubsub.SendTopics(ConfigManager.Auth.Twitch.Bot.Access);
+    }
+
+    private void PubSub_ListenResponse(object? sender, OnListenResponseArgs e)
+    {
+        Console.WriteLine($"Listen-Response: {e.Topic} ({e.Successful}): {e.Response.Error}");
+    }
+
+    private void Client_MessageReceived(object? sender, OnMessageReceivedArgs e)
+    {
+        TwitchMessages _Message = new()
+        {
+            timestamp = DateTime.Now,
+            User = e.ChatMessage.DisplayName,
+            Message = e.ChatMessage.Message
+        };
+
+        var x = ChatMessages.OrderByDescending(x => x.timestamp).ToArray();
+        x[^1] = _Message;
+        ChatMessages = x;
+
         Console.WriteLine("New Message from " + e.ChatMessage.DisplayName + "\n" + e.ChatMessage.Message);
     }
 
@@ -49,13 +96,13 @@ public partial class TwitchBot
                 EncodeImageUrl((await _api.Helix.Games.GetGamesAsync(new List<string> { stream.GameId })).Games[0]
                     .BoxArtUrl);
             if (stream.Type.Length >= 1)
-                await RoboSushi.DiscordBot?.SendLiveNotification(stream.UserName, stream.GameName, stream.Title,
+                await ClassHelper.DiscordBot?.SendLiveNotification(stream.UserName, stream.GameName, stream.Title,
                     stream.StartedAt, stream.ViewerCount, stream.Language, stream.IsMature,
                     $"{stream.Type[..1].ToUpper()}{stream.Type[1..]}",
                     EncodeImageUrl(stream.ThumbnailUrl), gameThumbnail, userIcon)!;
         }
 
-        await RoboSushi.DiscordBot?.UpdateMemberCount()!;
+        await ClassHelper.DiscordBot?.UpdateMemberCount()!;
     }
 
     private async void PubSub_StreamDown(object? sender, OnStreamDownArgs e)
@@ -63,10 +110,10 @@ public partial class TwitchBot
         Console.WriteLine(e.ChannelId + " is off!");
 
         var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.ChannelId })).Users[0];
-        await RoboSushi.DiscordBot?.SendOffNotification(user.DisplayName, DateTime.Now,
+        await ClassHelper.DiscordBot?.SendOfflineNotification(user.DisplayName, DateTime.Now,
             EncodeImageUrl(user.OfflineImageUrl), EncodeImageUrl(user.ProfileImageUrl))!;
 
-        await RoboSushi.DiscordBot.UpdateMemberCount();
+        await ClassHelper.DiscordBot.UpdateMemberCount();
     }
 
     private async void PubSub_Ban(object? sender, OnBanArgs e)
@@ -81,9 +128,10 @@ public partial class TwitchBot
         var userName = user.DisplayName;
         var userIcon = EncodeImageUrl(user.ProfileImageUrl);
         var userCreated = user.CreatedAt.AddHours(2);
+        var lastMessage = ChatMessages.ToList().Where(x => x.User == e.BannedUser).Last().Message;
 
         await DiscordBot.SendBanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
-            userCreated, e.BanReason);
+            userCreated, lastMessage, e.BanReason);
     }
 
     private async void PubSub_Unban(object? sender, OnUnbanArgs e)
@@ -115,9 +163,10 @@ public partial class TwitchBot
         var userName = user.DisplayName;
         var userIcon = EncodeImageUrl(user.ProfileImageUrl);
         var userCreated = user.CreatedAt.AddHours(2);
+        var lastMessage = ChatMessages.ToList().Where(x => x.User == e.TimedoutUserId).Last().Message;
 
         await DiscordBot.SendTimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
-            userCreated, e.TimeoutDuration, e.TimeoutReason);
+            userCreated, lastMessage, e.TimeoutDuration, e.TimeoutReason);
     }
 
     private async void PubSub_Untimeout(object? sender, OnUntimeoutArgs e)
@@ -136,14 +185,6 @@ public partial class TwitchBot
         await DiscordBot.SendUntimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
             userCreated);
     }
-
-    /*private void PubSub_AutomodCaughtMessage (object? sender, OnAutomodCaughtMessageArgs e) {
-		Console.WriteLine($"AutomodCaughtMessage: [{e.AutomodCaughtMessage.Message.Sender.DisplayName} ({e.AutomodCaughtMessage.ResolverLogin})]: {e.AutomodCaughtMessage.Message}\n{e.AutomodCaughtMessage.Status}: {e.AutomodCaughtMessage.ReasonCode} ({e.AutomodCaughtMessage.ContentClassification.Level} - {e.AutomodCaughtMessage.ContentClassification.Category})");
-	}
-
-	private void PubSub_AutomodCaughtUserMessage (object? sender, OnAutomodCaughtUserMessage e) {
-		Console.WriteLine($"AutomodCaughtUserMessage: [{e.AutomodCaughtMessage.Status}]: ({e.UserId}) {e.AutomodCaughtMessage.MessageId}");
-	}*/
 
     private async void PubSub_MessageDeleted(object? sender, OnMessageDeletedArgs e)
     {
@@ -250,28 +291,6 @@ public partial class TwitchBot
     {
         var id = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { ConfigManager.Config.Twitch.Channel });
         return (await _api.Helix.Users.GetUsersFollowsAsync(toId: id.Users[0].Id)).TotalFollows;
-    }
-
-    private async Task CheckTokens(bool force = false)
-    {
-        var valid = await _api.Auth.ValidateAccessTokenAsync(ConfigManager.Auth.Twitch.Bot.Access);
-        if (valid == null || valid.ExpiresIn > 300 || force)
-        {
-            var tokens = await _api.Auth.RefreshAuthTokenAsync(ConfigManager.Auth.Twitch.Bot.Refresh,
-                ConfigManager.Auth.Twitch.Client.Secret, ConfigManager.Auth.Twitch.Client.Id);
-            ConfigManager.RefreshTwitchBotTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresIn);
-            _api.Settings.AccessToken = tokens.AccessToken;
-        }
-
-        valid = await _api.Auth.ValidateAccessTokenAsync(ConfigManager.Auth.Twitch.Channel.Access);
-        if (valid == null || valid.ExpiresIn > 300 || force)
-        {
-            var tokens = await _api.Auth.RefreshAuthTokenAsync(ConfigManager.Auth.Twitch.Channel.Refresh,
-                ConfigManager.Auth.Twitch.Client.Secret, ConfigManager.Auth.Twitch.Client.Id);
-            ConfigManager.RefreshTwitchChannelTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresIn);
-        }
-
-        await RoboSushi.DiscordBot?.UpdateMemberCount()!;
     }
 
     private static string EncodeImageUrl(string url)

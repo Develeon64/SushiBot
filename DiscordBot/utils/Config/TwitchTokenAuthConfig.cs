@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Serialization;
 using TwitchLib.Api.Core.Enums;
 
-namespace Develeon64.RoboSushi.Util.Config;
+namespace Dietze.Utils.Config;
 
 [JsonObject(
     ItemRequired = Required.DisallowNull,

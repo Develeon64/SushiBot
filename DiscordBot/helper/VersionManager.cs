@@ -1,4 +1,4 @@
-﻿namespace Develeon64.RoboSushi.Util;
+﻿namespace Dietze.helper;
 
 public static class VersionManager
 {
@@ -12,8 +12,7 @@ public static class VersionManager
     public static string PreVersion => !string.IsNullOrWhiteSpace(preVersion) ? $"-{preVersion}" : string.Empty;
     public static string BuildVersion => $"+{buildVersion}";
 
-    public static string FullVersion =>
-        $"{Prefix}{MajorVersion}.{MinorVersion}.{PatchVersion}{PreVersion}{BuildVersion}";
+    public static string FullVersion => $"{Prefix}{MajorVersion}.{MinorVersion}.{PatchVersion}{PreVersion}{BuildVersion}";
 
     public static string GitVersion => $"{Prefix}1.4.5";
 }
