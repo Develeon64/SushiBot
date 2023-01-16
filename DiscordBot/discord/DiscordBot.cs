@@ -284,7 +284,8 @@ public partial class DiscordBot
 
         embed.AddField("__Created__", $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
         embed.AddBlankField();
-        embed.AddField("__Last message__", $"{lastMessage}");
+        if (lastMessage !=  null)
+            embed.AddField("__Last message__", $"{lastMessage}");
         embed.WithColorPink();
 
         if (ConfigManager.Config.Discord.ModRoles != null)
@@ -331,7 +332,8 @@ public partial class DiscordBot
         embed.AddField("__Duration__",
             $"{duration.TotalSeconds} Seconds\n{ConvertTimeoutDuration(duration)}\n{ConvertTimeoutTime(duration)}");
         embed.AddBlankField();
-        embed.AddField("__Last message__", $"{lastMessage}");
+        if (lastMessage != null)
+            embed.AddField("__Last message__", $"{lastMessage}");
 
         embed.WithColorYellow();
 

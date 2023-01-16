@@ -128,7 +128,7 @@ public partial class TwitchBot
         var userName = user.DisplayName;
         var userIcon = EncodeImageUrl(user.ProfileImageUrl);
         var userCreated = user.CreatedAt.AddHours(2);
-        var lastMessage = ChatMessages.ToList().Where(x => x.User == e.BannedUser).Last().Message;
+        var lastMessage = ChatMessages.ToList().Where(x => x.User == e.BannedUser).LastOrDefault().Message;
 
         await DiscordBot.SendBanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
             userCreated, lastMessage, e.BanReason);
@@ -163,7 +163,7 @@ public partial class TwitchBot
         var userName = user.DisplayName;
         var userIcon = EncodeImageUrl(user.ProfileImageUrl);
         var userCreated = user.CreatedAt.AddHours(2);
-        var lastMessage = ChatMessages.ToList().Where(x => x.User == e.TimedoutUserId).Last().Message;
+        var lastMessage = ChatMessages.ToList().Where(x => x.User == e.TimedoutUser).LastOrDefault().Message;
 
         await DiscordBot.SendTimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
             userCreated, lastMessage, e.TimeoutDuration, e.TimeoutReason);
