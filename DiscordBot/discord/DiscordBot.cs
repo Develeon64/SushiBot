@@ -267,7 +267,7 @@ public partial class DiscordBot
     }
 
     public static async Task SendBanNotification(string channelName, string channelIcon, string bannerName,
-        string bannerIcon, string userName, string userIcon, DateTime userCreated, string lastMessage, string? reason = null)
+        string bannerIcon, string userName, string userIcon, DateTime userCreated, string lastMessage, DateTime followerTime, string? reason = null)
     {
         DiscordEmbedBuilder embed = new()
         {
@@ -283,9 +283,14 @@ public partial class DiscordBot
         }
 
         embed.AddField("__Created__", $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
-        embed.AddBlankField();
+
         if (lastMessage !=  null)
             embed.AddField("__Last message__", $"{lastMessage}");
+
+
+        if (followerTime != null)
+            embed.AddField("__Followed since__", $"{followerTime} - {(DateTime.Now - followerTime).Days} days ago");
+
         embed.WithColorPink();
 
         if (ConfigManager.Config.Discord.ModRoles != null)
@@ -315,7 +320,7 @@ public partial class DiscordBot
     }
 
     public static async Task SendTimeoutNotification(string channelName, string channelIcon, string bannerName,
-        string bannerIcon, string userName, string userIcon, DateTime userCreated, string lastMessage, TimeSpan duration,
+        string bannerIcon, string userName, string userIcon, DateTime userCreated, string lastMessage, DateTime followerTime, TimeSpan duration,
         string? reason = null)
     {
         DiscordEmbedBuilder embed = new()
@@ -331,9 +336,11 @@ public partial class DiscordBot
         embed.AddField("__Created__", $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
         embed.AddField("__Duration__",
             $"{duration.TotalSeconds} Seconds\n{ConvertTimeoutDuration(duration)}\n{ConvertTimeoutTime(duration)}");
-        embed.AddBlankField();
         if (lastMessage != null)
             embed.AddField("__Last message__", $"{lastMessage}");
+
+        if (followerTime != null)
+            embed.AddField("__Followed since__", $"{followerTime} - {(DateTime.Now - followerTime).Days} days ago");
 
         embed.WithColorYellow();
 
