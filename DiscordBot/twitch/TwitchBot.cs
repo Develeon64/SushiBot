@@ -60,7 +60,7 @@ public partial class TwitchBot
         Console.WriteLine($"Listen-Response: {e.Topic} ({e.Successful}): {e.Response.Error}");
     }
 
-    private async void Client_MessageReceived(object? sender, OnMessageReceivedArgs e)
+    private void Client_MessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         TwitchMessages _Message = new()
         {
@@ -130,7 +130,7 @@ public partial class TwitchBot
         var userCreated = user.CreatedAt.AddHours(2);
         var lastMessage = ChatMessages.ToList().Where(x => x.User == e.BannedUser).LastOrDefault().Message;
 
-        var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.BannedUserId, toId: e.ChannelId)).Follows.FirstOrDefault().FollowedAt;
+        var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.BannedUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
 
         await DiscordBot.SendBanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
             userCreated, lastMessage, followerTime, e.BanReason);
@@ -166,7 +166,7 @@ public partial class TwitchBot
         var userIcon = EncodeImageUrl(user.ProfileImageUrl);
         var userCreated = user.CreatedAt.AddHours(2);
         var lastMessage = ChatMessages.ToList().Where(x => x.User == e.TimedoutUser).LastOrDefault().Message;
-        var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.TimedoutUserId, toId: e.ChannelId)).Follows.FirstOrDefault().FollowedAt;
+        var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.TimedoutUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
 
         await DiscordBot.SendTimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
             userCreated, lastMessage, followerTime, e.TimeoutDuration, e.TimeoutReason);

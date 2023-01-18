@@ -267,7 +267,7 @@ public partial class DiscordBot
     }
 
     public static async Task SendBanNotification(string channelName, string channelIcon, string bannerName,
-        string bannerIcon, string userName, string userIcon, DateTime userCreated, string lastMessage, DateTime followerTime, string? reason = null)
+        string bannerIcon, string userName, string userIcon, DateTime userCreated, string lastMessage, DateTime? followerTime, string? reason = null)
     {
         DiscordEmbedBuilder embed = new()
         {
@@ -289,7 +289,7 @@ public partial class DiscordBot
 
 
         if (followerTime != null)
-            embed.AddField("__Followed since__", $"{followerTime} - {(DateTime.Now - followerTime).Days} days ago");
+            embed.AddField("__Followed since__", $"{followerTime} - {(DateTime.Now - followerTime.Value).Days} days ago");
 
         embed.WithColorPink();
 
@@ -320,7 +320,7 @@ public partial class DiscordBot
     }
 
     public static async Task SendTimeoutNotification(string channelName, string channelIcon, string bannerName,
-        string bannerIcon, string userName, string userIcon, DateTime userCreated, string lastMessage, DateTime followerTime, TimeSpan duration,
+        string bannerIcon, string userName, string userIcon, DateTime userCreated, string lastMessage, DateTime? followerTime, TimeSpan duration,
         string? reason = null)
     {
         DiscordEmbedBuilder embed = new()
@@ -340,7 +340,7 @@ public partial class DiscordBot
             embed.AddField("__Last message__", $"{lastMessage}");
 
         if (followerTime != null)
-            embed.AddField("__Followed since__", $"{followerTime} - {(DateTime.Now - followerTime).Days} days ago");
+            embed.AddField("__Followed since__", $"{followerTime} - {(DateTime.Now - followerTime.Value).Days} days ago");
 
         embed.WithColorYellow();
 
