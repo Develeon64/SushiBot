@@ -17,7 +17,8 @@ public partial class DiscordBot
             GatewayIntents = GatewayIntents.All,
             LogLevel = LogSeverity.Info,
             MaxWaitBetweenGuildAvailablesBeforeReady = ConfigManager.Config.Discord.ReadyWait,
-            TotalShards = 1
+            TotalShards = 1,
+            UseInteractionSnowflakeDate = false
         });
 
         Initialize();

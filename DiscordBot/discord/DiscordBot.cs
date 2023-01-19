@@ -30,6 +30,11 @@ public partial class DiscordBot
                 },
                 new SlashCommandBuilder
                 {
+                    Name = "ping",
+                    Description = "Pings the bot to get the latency"
+                },
+                new SlashCommandBuilder
+                {
                     Name = "version",
                     Description = "Show Version information of the bot."
                 }
@@ -85,6 +90,18 @@ public partial class DiscordBot
                     {
                         await command.RespondAsync("There is nothing to close here.", ephemeral: true);
                     }
+
+                    break;
+                }
+            case "ping":
+                {
+                    DiscordEmbedBuilder builder = new(_client.CurrentUser)
+                    {
+                        Description = "Ping Pong",
+                        Title = $"__Ping latency: {_client.Latency} ms__"
+                    };
+
+                    await command.RespondAsync(embed: builder.Build());
 
                     break;
                 }
