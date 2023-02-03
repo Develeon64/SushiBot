@@ -1,11 +1,11 @@
 ﻿{
   "discord": {
-    "id": ,
+    "id": 0,
     "key": "",
     "secret": "",
     "token": "",
     "username": "",
-    "discriminator": 
+    "discriminator": 0
   },
   "twitch": {
     "client": {

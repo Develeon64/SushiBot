@@ -1,27 +1,32 @@
 {
   "discord": { // Konfigurationen für das Discord-Modul
-    "guild": , // Streamer-Discord-Server-ID
+    "guild": 0, // Streamer-Discord-Server-ID
     "sync_commands": true, // Unberührt lassen
     "ready_wait": 30, // Unberührt lassen
     "mental_channel": { // Ein Thread, der moderiert werden soll
-      "id":  // ID des besonders moderierten Channels
+      "id": 0 // ID des besonders moderierten Channels
     },
     "notify_channel": { // Channel, in dem die Twitch-Live-Benachrichtigungen gepostet werden sollen
-      "id":  // ID des Channels
+      "id": 0 // ID des Channels
     },
     "count_channel": { // Channel, der die Anzahl der Discord Server-Mitglieder anzeigt
-      "id": , // ID des Channels
+      "id": 0, // ID des Channels
       "noMember": [], // ID's von Discordusern die nicht als Mitglieder des Servers mitgezählt werden sollen e.g. [123124, 12312414, 121241]
       "prefix": "Member", // Text, der vor der Anzahl angezeigt werden soll (Format: "Prefix: 0 Postfix")
       "postfix": "\uD83D\uDC4C" // Text, der hinter der Anzahl angezeigt werden soll (Format: "Prefix: 0 Postfix")
     },
     "follower_channel": { // Channel, der die Anzahl der Follower des Streamers anzeigt
-      "id": , // ID des Channels
+      "id": 0, // ID des Channels
       "prefix": "Follower", // Text, der vor der Anzahl angezeigt werden soll (Format: "Prefix: 0 Postfix")
       "postfix": "" // Text, der hinter der Anzahl angezeigt werden soll (Format: "Prefix: 0 Postfix")
     },
     "mod_channel": { // Channel, indem Moderations-Aktionen im Twitch-Chat gepostet werden sollen
-      "id": , // Channel-ID (Token entfernen) oder Webhook-ID (Token eintragen!)
+      "id": 0, // Webhook-ID (Token eintragen!)
+      "token": "" // Falls Webhook-ID angegeben, hier Token des Webhooks eintragen!
+    },
+    "chat_channel": { // Channel, indem der Twitch-Chat gepostet werden soll / Discordnachrichten an Twitch übertragen werden
+      "id": 0, // Webhook-ID (Token eintragen!)
+      "chat_id": 0, // Channel ID
       "token": "" // Falls Webhook-ID angegeben, hier Token des Webhooks eintragen!
     },
     "admin_roles": [ // Liste aller Rollen-IDs, die typischerweise Administratoren haben
