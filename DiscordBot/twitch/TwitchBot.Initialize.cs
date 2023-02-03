@@ -27,9 +27,6 @@ public partial class TwitchBot
         await InitializeApi();
         InitializeClient();
         InitializePubSub();
-
-        _client.Connect();
-        _pubsub.Connect();
     }
 
     private async Task InitializeApi()
@@ -49,7 +46,7 @@ public partial class TwitchBot
             .Users[0];
     }
 
-    private void InitializeClient()
+    public void InitializeClient()
     {
         _client.Initialize(
             new ConnectionCredentials(ConfigManager.Config.Twitch.Username, ConfigManager.Auth.Twitch.Bot.Access),
@@ -58,8 +55,11 @@ public partial class TwitchBot
         _client.OnConnected += Client_Connected;
         _client.OnJoinedChannel += Client_JoinedChannel;
 
+
         _client.OnMessageSent += Client_MessageSent;
         _client.OnMessageReceived += Client_MessageReceived;
+
+        _client.Connect();
     }
 
     private void InitializePubSub()
@@ -84,5 +84,7 @@ public partial class TwitchBot
         _pubsub.OnEmoteOnlyOff += PubSub_EmoteOnlyOff;
         _pubsub.OnR9kBeta += PubSub_R9kBeta;
         _pubsub.OnR9kBetaOff += PubSub_R9kBetaOff;
+
+        _pubsub.Connect();
     }
 }

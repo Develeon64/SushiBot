@@ -8,7 +8,7 @@ using Discord;
 
 using Dietze.Utils.Db;
 using Dietze.helper;
-using System.Diagnostics.Metrics;
+using TwitchLib.Client.Models;
 
 namespace Dietze.Discord;
 
@@ -62,6 +62,19 @@ public partial class DiscordBot
     private async Task ClientUserLeft(SocketGuild guild, SocketUser user)
     {
         await UpdateMemberCount($"New Member-Count: Member left: {user.Username}#{user.Discriminator}");
+    }
+
+    private async Task ClientMessageRecieved(SocketMessage message)
+    {
+        if(message.Channel.Id == ConfigManager.Config.Discord.ChatChannel?.ChatId && message.Source != MessageSource.Webhook && message.Author.Id != ConfigManager.Auth.Discord.Id)
+        {
+            ClassHelper.TwitchBot?.SendDiscordMessageToTwitch(message.Author.Username, message.CleanContent);
+        }
+    }
+
+    public async Task SendTwitchMessageToDiscord(string Username, ChatMessage message, string userIcon)
+    {
+       await new DiscordWebhookClient(ConfigManager.Config.Discord.ChatChannel?.Id ?? 0, ConfigManager.Config.Discord.ChatChannel?.Token).SendMessageAsync(message.Message, username: message.DisplayName, avatarUrl: userIcon);
     }
 
     private async Task ClientSlashCommandExecuted(SocketSlashCommand command)
@@ -158,62 +171,66 @@ public partial class DiscordBot
             List<string> counted = new();
             var NoMembers = ConfigManager.Config.Discord.CountChannel?.NoMembers ?? new ulong[] { 0 };
 
+            if (_guild?.GetUsersAsync() != null)
+            {
+                await foreach (var members in _guild?.GetUsersAsync())
+                    foreach (var member in members)
+                        if (!member.IsBot && !NoMembers.Contains(member.Id) &&
+                            !counted.Contains(member.Username.ToLower()) &&
+                            !counted.Contains(member.Nickname?.ToLower() ?? string.Empty))
+                        {
+                            memberCount += 1;
+                            counted.Add(member.Username.ToLower());
+                            if (!string.IsNullOrWhiteSpace(member.Nickname))
+                                counted.Add(member.Nickname.ToLower());
+                        }
 
-            await foreach (var members in _guild?.GetUsersAsync()!)
-                foreach (var member in members)
-                    if (!member.IsBot && !NoMembers.Contains(member.Id) &&
-                        !counted.Contains(member.Username.ToLower()) &&
-                        !counted.Contains(member.Nickname?.ToLower() ?? string.Empty))
-                    {
-                        memberCount += 1;
-                        counted.Add(member.Username.ToLower());
-                        if (!string.IsNullOrWhiteSpace(member.Nickname))
-                            counted.Add(member.Nickname.ToLower());
-                    }
+                var memberString = string.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel?.Prefix)
+                    ? string.Empty
+                    : $"{ConfigManager.Config.Discord.CountChannel?.Prefix}: ";
+                memberString += memberCount;
+                if (!string.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel?.Postfix))
+                    memberString += $" {ConfigManager.Config.Discord.CountChannel?.Postfix}";
+                await _guild.GetChannel(ConfigManager.Config.Discord.CountChannel?.Id ?? 0)
+                    .ModifyAsync(props => { props.Name = memberString; }, new RequestOptions { AuditLogReason = reason });
 
-            var memberString = string.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel?.Prefix)
-                ? string.Empty
-                : $"{ConfigManager.Config.Discord.CountChannel?.Prefix}: ";
-            memberString += memberCount;
-            if (!string.IsNullOrWhiteSpace(ConfigManager.Config.Discord.CountChannel?.Postfix))
-                memberString += $" {ConfigManager.Config.Discord.CountChannel?.Postfix}";
-            await _guild.GetChannel(ConfigManager.Config.Discord.CountChannel?.Id ?? 0)
-                .ModifyAsync(props => { props.Name = memberString; }, new RequestOptions { AuditLogReason = reason });
+                var followerCount = await ClassHelper.TwitchBot?.GetFollowerCount()!;
+                var followerString = string.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel?.Prefix)
+                    ? string.Empty
+                    : $"{ConfigManager.Config.Discord.FollowerChannel?.Prefix}: ";
+                followerString += followerCount;
+                if (!string.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel?.Postfix))
+                    followerString += $" {ConfigManager.Config.Discord.FollowerChannel?.Postfix}";
+                await _guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel?.Id ?? 0)
+                    .ModifyAsync(props => { props.Name = followerString; }, new RequestOptions { AuditLogReason = reason });
 
-            var followerCount = await ClassHelper.TwitchBot?.GetFollowerCount()!;
-            var followerString = string.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel?.Prefix)
-                ? string.Empty
-                : $"{ConfigManager.Config.Discord.FollowerChannel?.Prefix}: ";
-            followerString += followerCount;
-            if (!string.IsNullOrWhiteSpace(ConfigManager.Config.Discord.FollowerChannel?.Postfix))
-                followerString += $" {ConfigManager.Config.Discord.FollowerChannel?.Postfix}";
-            await _guild.GetChannel(ConfigManager.Config.Discord.FollowerChannel?.Id ?? 0)
-                .ModifyAsync(props => { props.Name = followerString; }, new RequestOptions { AuditLogReason = reason });
+            }
         }
     }
 
+
     public async Task SendLiveNotification(string username, string game, string title, DateTime started,
-        int viewerCount, string language, bool mature, string type, string streamUrl, string thumbnailUrl,
-        string iconUrl)
+        int viewerCount, string type, string streamUrl, string thumbnailUrl, string iconUrl)
     {
         DiscordEmbedBuilder embed = new()
         {
             Author = new EmbedAuthorBuilder
-            { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
-            Description = $"**{EscapeMessage(username)}** is now on Twitch!",
-            ImageUrl = streamUrl,
-            ThumbnailUrl = thumbnailUrl,
-            Timestamp = started,
-            Title = EscapeMessage(title),
-            Url = $"https://www.twitch.tv/{username}"
+            { 
+                Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
+                Description = $"**{EscapeMessage(username)}** is now on Twitch!",
+                ImageUrl = streamUrl,
+                ThumbnailUrl = thumbnailUrl,
+                Timestamp = started,
+                Title = EscapeMessage(title),
+                Url = $"https://www.twitch.tv/{username}"
         };
         embed.WithColorGreen();
         embed.AddField("__**Category**__", game, true);
         embed.AddField("__**Type**__", type, true);
         embed.AddField("__**ViewerCount**__", viewerCount, true);
         embed.AddBlankField();
-        embed.AddField("__**Instagram**__", "[@dietz_marcel_](https://www.instagram.com/dietz_marcel_/)", true);
-        embed.AddField("__**Twitter**__", "[@Dietze_95](https://www.twitter.com/@dietze_95/)", true);
+        embed.AddField("__**Instagram**__", "[@erynation.xyz](https://www.instagram.com/erynation.xyz/)", true);
+        embed.AddField("__**Twitter**__", "[@erynation](https://www.twitter.com/@erynation/)", true);
 
         var everyone = $"@everyone look at https://www.twitch.tv/{username.ToLower()}";
         if (ConfigManager.Config.Discord.NotifyChannel?.Token != null)
@@ -245,7 +262,9 @@ public partial class DiscordBot
         DiscordEmbedBuilder embed = new()
         {
             Author = new EmbedAuthorBuilder
-            { Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl },
+            { 
+                Name = username, Url = $"https://www.twitch.tv/{username}/about", IconUrl = iconUrl 
+            },
             Description =
                 $"**[{EscapeMessage(username)}](https://www.twitch.tv/{username})** is *offline* right now.\nBut you can watch the latest [VODs](https://www.twitch.tv/{username}/videos).",
             ImageUrl = streamUrl,
@@ -253,9 +272,10 @@ public partial class DiscordBot
             Title = "Stream is down",
             Url = $"https://www.twitch.tv/{username}/schedule"
         };
+
         embed.WithColorGrey();
-        embed.AddField("__**Instagram**__", "[@dietz_marcel_](https://www.instagram.com/dietz_marcel_/)", true);
-        embed.AddField("__**Twitter**__", "[@Dietze_95](https://www.twitter.com/@dietze_95/)", true);
+        embed.AddField("__**Instagram**__", "[@erynation.xyz](https://www.instagram.com/erynation.xyz/)", true);
+        embed.AddField("__**Twitter**__", "[@erynation](https://www.twitter.com/@erynation/)", true);
 
         if (ConfigManager.Config.Discord.NotifyChannel?.Token != null)
             await new DiscordWebhookClient(ConfigManager.Config.Discord.NotifyChannel?.Id ?? 0,
@@ -293,6 +313,7 @@ public partial class DiscordBot
             Title = $"{userName} was **BANNED**!",
             Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}"
         };
+
         if (reason != null)
         {
             reason = "Reason: " + reason;
@@ -301,19 +322,17 @@ public partial class DiscordBot
 
         embed.AddField("__Created__", $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
 
-        if (lastMessage !=  null)
-            embed.AddField("__Last message__", $"{lastMessage}");
-
-
         if (followerTime != null)
-            embed.AddField("__Followed since__", $"{followerTime} - {(DateTime.Now - followerTime.Value).Days} days ago");
+            embed.AddField("__Followed since__", $"{followerTime}");
+
+        if (lastMessage != null)
+            embed.AddField("__Last message__", $"{lastMessage}");
 
         embed.WithColorPink();
 
         if (ConfigManager.Config.Discord.ModRoles != null)
             await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0,
                 ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(
-                $"**BAN**\n<@&{string.Join("> <@&", ConfigManager.Config.Discord.ModRoles)}>",
                 embeds: new List<Embed> { embed.Build() }, username: channelName, avatarUrl: channelIcon);
     }
 
@@ -350,21 +369,23 @@ public partial class DiscordBot
         if (reason != null)
             embed.WithDescription(EscapeMessage(reason));
 
-        embed.AddField("__Created__", $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
+        embed.AddField("__Created__", 
+            $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
+
         embed.AddField("__Duration__",
             $"{duration.TotalSeconds} Seconds\n{ConvertTimeoutDuration(duration)}\n{ConvertTimeoutTime(duration)}");
-        if (lastMessage != null)
-            embed.AddField("__Last message__", $"{lastMessage}");
 
         if (followerTime != null)
-            embed.AddField("__Followed since__", $"{followerTime} - {(DateTime.Now - followerTime.Value).Days} days ago");
+            embed.AddField("__Followed since__", $"{followerTime}");
+
+        if (lastMessage != null)
+            embed.AddField("__Last message__", $"{lastMessage}");
 
         embed.WithColorYellow();
 
         if (ConfigManager.Config.Discord.ModRoles != null)
             await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0,
                 ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(
-                $"**BAN**\n<@&{string.Join("> <@&", ConfigManager.Config.Discord.ModRoles)}>",
                 embeds: new List<Embed> { embed.Build() }, username: channelName, avatarUrl: channelIcon);
     }
 
@@ -379,7 +400,9 @@ public partial class DiscordBot
             Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}"
         };
 
-        embed.AddField("__Created__", $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
+        embed.AddField("__Created__", 
+            $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
+
         embed.WithColorLime();
 
         await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0,
@@ -399,7 +422,9 @@ public partial class DiscordBot
             Url = $"https://www.twitch.tv/popout/{channelName}/viewercard/{userName}"
         };
 
-        embed.AddField("__Created__", $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
+        embed.AddField("__Created__", 
+            $"User created: {userCreated:dd.MM.yyyy HH:mm:ss}");
+
         embed.WithColorPink();
 
         await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0,
@@ -432,8 +457,8 @@ public partial class DiscordBot
             Title = $"**Subscriber only** mode is now **{(on ? "ON" : "OFF")}**!",
             Url = $"https://www.twitch.tv/moderator/{channelName}"
         };
-        if (on) embed.WithColorPink();
-        else embed.WithColorLime();
+        if (on) embed.WithColorLime();
+        else embed.WithColorGrey();
 
         await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0,
             ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed> { embed.Build() },
@@ -449,8 +474,8 @@ public partial class DiscordBot
             Title = $"**Emote only** mode is now **{(on ? "ON" : "OFF")}**!",
             Url = $"https://www.twitch.tv/moderator/{channelName}"
         };
-        if (on) embed.WithColorYellow();
-        else embed.WithColorLime();
+        if (on) embed.WithColorLime();
+        else embed.WithColorGrey();
 
         await new DiscordWebhookClient(ConfigManager.Config.Discord.ModChannel?.Id ?? 0,
             ConfigManager.Config.Discord.ModChannel?.Token).SendMessageAsync(embeds: new List<Embed> { embed.Build() },
@@ -477,11 +502,6 @@ public partial class DiscordBot
     private static string EscapeMessage(string text)
     {
         return text.Replace("<", "\\<").Replace("*", "\\*").Replace("_", "\\_").Replace("`", "\\`").Replace(":", "\\:");
-    }
-
-    private static string FormatTimeSpan(DateTime dateTime)
-    {
-        return DateTime.Now.Subtract(dateTime).ToVerboseString().Replace(" And ", " ");
     }
 
     private static string ConvertTimeoutDuration(TimeSpan duration)

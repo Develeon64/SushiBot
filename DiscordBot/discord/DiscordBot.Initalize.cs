@@ -32,6 +32,8 @@ public partial class DiscordBot
         _client.UserJoined += ClientUserJoined;
         _client.UserLeft += ClientUserLeft;
 
+        _client.MessageReceived += ClientMessageRecieved;
+
         _client.ThreadCreated += ClientThreadCreated;
         _client.ThreadUpdated += ClientThreadUpdated;
         _client.SlashCommandExecuted += ClientSlashCommandExecuted;

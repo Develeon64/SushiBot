@@ -60,7 +60,7 @@ public partial class TwitchBot
         Console.WriteLine($"Listen-Response: {e.Topic} ({e.Successful}): {e.Response.Error}");
     }
 
-    private void Client_MessageReceived(object? sender, OnMessageReceivedArgs e)
+    private async void Client_MessageReceived(object? sender, OnMessageReceivedArgs e)
     {
         TwitchMessages _Message = new()
         {
@@ -73,7 +73,20 @@ public partial class TwitchBot
         x[^1] = _Message;
         ChatMessages = x;
 
+        var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.ChatMessage.UserId })).Users[0];
+        var userIcon = EncodeImageUrl(user.ProfileImageUrl);
+
+        if(e.ChatMessage.DisplayName != ConfigManager.Config.Twitch.Username)
+        {
+            await ClassHelper.DiscordBot?.SendTwitchMessageToDiscord(e.ChatMessage.DisplayName, e.ChatMessage, userIcon)!;
+        }
+
         Console.WriteLine("New Message from " + e.ChatMessage.DisplayName + "\n" + e.ChatMessage.Message);
+    }
+
+    public void SendDiscordMessageToTwitch(string username, string message)
+    {
+        _client.SendMessage(ConfigManager.Config.Twitch.Channel, $"[{username}] {message}");
     }
 
     public void Client_MessageSent(object? sender, OnMessageSentArgs e)
@@ -97,8 +110,7 @@ public partial class TwitchBot
                     .BoxArtUrl);
             if (stream.Type.Length >= 1)
                 await ClassHelper.DiscordBot?.SendLiveNotification(stream.UserName, stream.GameName, stream.Title,
-                    stream.StartedAt, stream.ViewerCount, stream.Language, stream.IsMature,
-                    $"{stream.Type[..1].ToUpper()}{stream.Type[1..]}",
+                    stream.StartedAt, stream.ViewerCount, $"{stream.Type[..1].ToUpper()}{stream.Type[1..]}",
                     EncodeImageUrl(stream.ThumbnailUrl), gameThumbnail, userIcon)!;
         }
 
@@ -124,16 +136,18 @@ public partial class TwitchBot
         var banner = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.BannedByUserId })).Users[0];
         var bannerName = banner.DisplayName;
         var bannerIcon = EncodeImageUrl(banner.ProfileImageUrl);
-        var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.BannedUserId })).Users[0];
-        var userName = user.DisplayName;
-        var userIcon = EncodeImageUrl(user.ProfileImageUrl);
-        var userCreated = user.CreatedAt.AddHours(2);
-        var lastMessage = ChatMessages.ToList().Where(x => x.User == e.BannedUser).LastOrDefault().Message;
+        var user = await _api.Helix.Users.GetUsersAsync(new List<string> { e.BannedUserId });
 
-        var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.BannedUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
+        if(user.Users.Length != 0)
+        {
+            var userName = user.Users.First().DisplayName;
+            var userIcon = EncodeImageUrl(user.Users.First().ProfileImageUrl);
+            var userCreated = user.Users.First().CreatedAt.AddHours(2);
+            var lastMessage = ChatMessages.ToList().Where(x => x.User == e.BannedUser).LastOrDefault().Message;
+            var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.BannedUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
 
-        await DiscordBot.SendBanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
-            userCreated, lastMessage, followerTime, e.BanReason);
+            await DiscordBot.SendBanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated, lastMessage, followerTime, e.BanReason);
+        }
     }
 
     private async void PubSub_Unban(object? sender, OnUnbanArgs e)
@@ -144,13 +158,16 @@ public partial class TwitchBot
         var banner = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.UnbannedByUserId })).Users[0];
         var bannerName = banner.DisplayName;
         var bannerIcon = EncodeImageUrl(banner.ProfileImageUrl);
-        var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.UnbannedUserId })).Users[0];
-        var userName = user.DisplayName;
-        var userIcon = EncodeImageUrl(user.ProfileImageUrl);
-        var userCreated = user.CreatedAt.AddHours(2);
+        var user = await _api.Helix.Users.GetUsersAsync(new List<string> { e.UnbannedUserId });
 
-        await DiscordBot.SendUnbanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
-            userCreated);
+        if (user.Users.Length != 0)
+        {
+            var userName = user.Users.First().DisplayName;
+            var userIcon = EncodeImageUrl(user.Users.First().ProfileImageUrl);
+            var userCreated = user.Users.First().CreatedAt.AddHours(2);
+
+            await DiscordBot.SendUnbanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated);
+        }
     }
 
     private async void PubSub_Timeout(object? sender, OnTimeoutArgs e)
@@ -161,15 +178,18 @@ public partial class TwitchBot
         var banner = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.TimedoutById })).Users[0];
         var bannerName = banner.DisplayName;
         var bannerIcon = EncodeImageUrl(banner.ProfileImageUrl);
-        var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.TimedoutUserId })).Users[0];
-        var userName = user.DisplayName;
-        var userIcon = EncodeImageUrl(user.ProfileImageUrl);
-        var userCreated = user.CreatedAt.AddHours(2);
-        var lastMessage = ChatMessages.ToList().Where(x => x.User == e.TimedoutUser).LastOrDefault().Message;
-        var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.TimedoutUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
+        var user = await _api.Helix.Users.GetUsersAsync(new List<string> { e.TimedoutUserId });
 
-        await DiscordBot.SendTimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
-            userCreated, lastMessage, followerTime, e.TimeoutDuration, e.TimeoutReason);
+        if (user.Users.Length != 0)
+        {
+            var userName = user.Users.First().DisplayName;
+            var userIcon = EncodeImageUrl(user.Users.First().ProfileImageUrl);
+            var userCreated = user.Users.First().CreatedAt.AddHours(2);
+            var lastMessage = ChatMessages.ToList().Where(x => x.User == e.TimedoutUser).LastOrDefault().Message;
+            var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.TimedoutUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
+
+            await DiscordBot.SendTimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated, lastMessage, followerTime, e.TimeoutDuration, e.TimeoutReason);
+        }
     }
 
     private async void PubSub_Untimeout(object? sender, OnUntimeoutArgs e)
@@ -180,13 +200,16 @@ public partial class TwitchBot
         var banner = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.UntimeoutedByUserId })).Users[0];
         var bannerName = banner.DisplayName;
         var bannerIcon = EncodeImageUrl(banner.ProfileImageUrl);
-        var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.UntimeoutedUserId })).Users[0];
-        var userName = user.DisplayName;
-        var userIcon = EncodeImageUrl(user.ProfileImageUrl);
-        var userCreated = user.CreatedAt.AddHours(2);
+        var user = await _api.Helix.Users.GetUsersAsync(new List<string> { e.UntimeoutedUserId });
 
-        await DiscordBot.SendUntimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon,
-            userCreated);
+        if (user.Users.Length != 0)
+        {
+            var userName = user.Users.First().DisplayName;
+            var userIcon = EncodeImageUrl(user.Users.First().ProfileImageUrl);
+            var userCreated = user.Users.First().CreatedAt.AddHours(2);
+
+            await DiscordBot.SendUntimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated);
+        }
     }
 
     private async void PubSub_MessageDeleted(object? sender, OnMessageDeletedArgs e)
@@ -197,13 +220,15 @@ public partial class TwitchBot
         var deleter = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.DeletedByUserId })).Users[0];
         var deleterName = deleter.DisplayName;
         var deleterIcon = EncodeImageUrl(deleter.ProfileImageUrl);
-        var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.TargetUserId })).Users[0];
-        var userName = user.DisplayName;
-        var userIcon = EncodeImageUrl(user.ProfileImageUrl);
-        var userCreated = user.CreatedAt.AddHours(2);
+        var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.TargetUserId }))?.Users[0];
+        if (user != null)
+        {
+            var userName = user.DisplayName;
+            var userIcon = EncodeImageUrl(user.ProfileImageUrl);
+            var userCreated = user.CreatedAt.AddHours(2);
 
-        await DiscordBot.SendMessageDeletedNotification(channelName, channelIcon, deleterName, deleterIcon, userName,
-            userIcon, userCreated, e.Message);
+            await DiscordBot.SendMessageDeletedNotification(channelName, channelIcon, deleterName, deleterIcon, userName, userIcon, userCreated, e.Message);
+        }
     }
 
     private async void PubSub_Clear(object? sender, OnClearArgs e)

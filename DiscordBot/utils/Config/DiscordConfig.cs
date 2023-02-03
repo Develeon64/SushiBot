@@ -25,6 +25,8 @@ public struct DiscordConfig
 
     [JsonProperty] public ChannelConfig? ModChannel { get; set; }
 
+    [JsonProperty] public ChannelChatConfig? ChatChannel { get; set; }
+
     [JsonProperty] public ulong[]? AdminRoles { get; set; }
 
     [JsonProperty] public ulong[]? ModRoles { get; set; }
