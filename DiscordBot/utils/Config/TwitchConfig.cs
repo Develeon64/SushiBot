@@ -11,5 +11,5 @@ public struct TwitchConfig
 {
     [JsonProperty] public string Username { get; set; }
 
-    [JsonProperty] public string Channel { get; set; }
+    [JsonProperty] public List<string> Channel { get; set; }
 }

@@ -21,12 +21,19 @@ public partial class TwitchBot
     private readonly TwitchClient _client = new();
     private readonly TwitchPubSub _pubsub = new();
 
-    private User? _channel;
+    private List<string?> _channelId;
     private User? _moderator;
 
     private void Client_JoinedChannel(object? sender, OnJoinedChannelArgs e)
     {
         Console.WriteLine("Joined channel " + e.Channel);
+    }
+    private void _client_OnLeftChannel(object? sender, OnLeftChannelArgs e)
+    {
+        Console.WriteLine("Left channel " + e.Channel);
+
+        if (!_client.IsConnected)
+            InitializeClient();
     }
 
     private void Client_Connected(object? sender, OnConnectedArgs e)
@@ -38,21 +45,24 @@ public partial class TwitchBot
     {
         Console.WriteLine("PubSub connected!");
 
-        _pubsub.ListenToBitsEventsV2(_channel?.Id);
-        _pubsub.ListenToChannelPoints(_channel?.Id);
-        _pubsub.ListenToFollows(_channel?.Id);
-        _pubsub.ListenToLeaderboards(_channel?.Id);
-        _pubsub.ListenToPredictions(_channel?.Id);
-        _pubsub.ListenToRaid(_channel?.Id);
-        _pubsub.ListenToSubscriptions(_channel?.Id);
-        _pubsub.ListenToVideoPlayback(_channel?.Id);
-        _pubsub.ListenToWhispers(_channel?.Id);
-        _pubsub.SendTopics(ConfigManager.Auth.Twitch.Channel.Access);
+        foreach (var id in _channelId)
+        {
+            _pubsub.ListenToBitsEventsV2(id);
+            _pubsub.ListenToChannelPoints(id);
+            _pubsub.ListenToFollows(id);
+            _pubsub.ListenToLeaderboards(id);
+            _pubsub.ListenToPredictions(id);
+            _pubsub.ListenToRaid(id);
+            _pubsub.ListenToSubscriptions(id);
+            _pubsub.ListenToVideoPlayback(id);
+            _pubsub.ListenToWhispers(id);
+            _pubsub.SendTopics(ConfigManager.Auth.Twitch.Channel.Access);
 
-        _pubsub.ListenToAutomodQueue(_moderator?.Id, _channel?.Id);
-        _pubsub.ListenToChatModeratorActions(_moderator?.Id, _channel?.Id);
-        _pubsub.ListenToUserModerationNotifications(_moderator?.Id, _channel?.Id);
-        _pubsub.SendTopics(ConfigManager.Auth.Twitch.Bot.Access);
+            _pubsub.ListenToAutomodQueue(_moderator?.Id, id);
+            _pubsub.ListenToChatModeratorActions(_moderator?.Id, id);
+            _pubsub.ListenToUserModerationNotifications(_moderator?.Id, id);
+            _pubsub.SendTopics(ConfigManager.Auth.Twitch.Bot.Access);
+        }
     }
 
     private void PubSub_ListenResponse(object? sender, OnListenResponseArgs e)
@@ -65,28 +75,33 @@ public partial class TwitchBot
         TwitchMessages _Message = new()
         {
             timestamp = DateTime.Now,
-            User = e.ChatMessage.DisplayName,
+            User = e.ChatMessage.Username,
             Message = e.ChatMessage.Message
         };
 
-        var x = ChatMessages.OrderByDescending(x => x.timestamp).ToArray();
-        x[^1] = _Message;
-        ChatMessages = x;
+        ChatMessages[0] = _Message;
+        ChatMessages = ChatMessages.OrderBy(x => x.timestamp).ToArray();
 
-        var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.ChatMessage.UserId })).Users[0];
-        var userIcon = EncodeImageUrl(user.ProfileImageUrl);
-
-        if(e.ChatMessage.DisplayName != ConfigManager.Config.Twitch.Username)
+        try
         {
-            await ClassHelper.DiscordBot?.SendTwitchMessageToDiscord(e.ChatMessage.DisplayName, e.ChatMessage, userIcon)!;
+            var user = (await _api.Helix.Users.GetUsersAsync(new List<string> { e.ChatMessage.UserId })).Users[0];
+            var userIcon = EncodeImageUrl(user.ProfileImageUrl); 
+            if (e.ChatMessage.DisplayName != ConfigManager.Config.Twitch.Username)
+            {
+                await ClassHelper.DiscordBot?.SendTwitchMessageToDiscord(e.ChatMessage.DisplayName, e.ChatMessage, userIcon)!;
+            }
+        }
+        catch (Exception ex)
+        {
+
         }
 
-        Console.WriteLine("New Message from " + e.ChatMessage.DisplayName + "\n" + e.ChatMessage.Message);
+        //Console.WriteLine("New Message from " + e.ChatMessage.DisplayName + "\n" + e.ChatMessage.Message);
     }
 
     public void SendDiscordMessageToTwitch(string username, string message)
     {
-        _client.SendMessage(ConfigManager.Config.Twitch.Channel, $"[{username}] {message}");
+        _client.SendMessage(ConfigManager.Config.Twitch.Channel[0], $"[{username}] {message}");
     }
 
     public void Client_MessageSent(object? sender, OnMessageSentArgs e)
@@ -114,7 +129,7 @@ public partial class TwitchBot
                     EncodeImageUrl(stream.ThumbnailUrl), gameThumbnail, userIcon)!;
         }
 
-        await ClassHelper.DiscordBot?.UpdateMemberCount()!;
+        //await ClassHelper.DiscordBot?.UpdateMemberCount()!;
     }
 
     private async void PubSub_StreamDown(object? sender, OnStreamDownArgs e)
@@ -125,7 +140,7 @@ public partial class TwitchBot
         await ClassHelper.DiscordBot?.SendOfflineNotification(user.DisplayName, DateTime.Now,
             EncodeImageUrl(user.OfflineImageUrl), EncodeImageUrl(user.ProfileImageUrl))!;
 
-        await ClassHelper.DiscordBot.UpdateMemberCount();
+        //await ClassHelper.DiscordBot.UpdateMemberCount();
     }
 
     private async void PubSub_Ban(object? sender, OnBanArgs e)
@@ -143,10 +158,11 @@ public partial class TwitchBot
             var userName = user.Users.First().DisplayName;
             var userIcon = EncodeImageUrl(user.Users.First().ProfileImageUrl);
             var userCreated = user.Users.First().CreatedAt.AddHours(2);
-            var lastMessage = ChatMessages.ToList().Where(x => x.User == e.BannedUser).LastOrDefault().Message;
+            var lastMessage = ChatMessages.ToList().Where(x => x.User == e.BannedUser).Reverse().Take(4).Reverse().ToList();
+            var lastMessages = string.Join("\n \u2022 ", lastMessage.Select(x => x.Message).Reverse().Take(3).Reverse().ToArray());
             var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.BannedUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
 
-            await DiscordBot.SendBanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated, lastMessage, followerTime, e.BanReason);
+            await DiscordBot.SendBanNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated, lastMessages, followerTime, e.BanReason);
         }
     }
 
@@ -185,10 +201,11 @@ public partial class TwitchBot
             var userName = user.Users.First().DisplayName;
             var userIcon = EncodeImageUrl(user.Users.First().ProfileImageUrl);
             var userCreated = user.Users.First().CreatedAt.AddHours(2);
-            var lastMessage = ChatMessages.ToList().Where(x => x.User == e.TimedoutUser).LastOrDefault().Message;
+            var lastMessage = ChatMessages.ToList().Where(x => x.User == e.TimedoutUser).Reverse().Take(4).Reverse().ToList();
+            var lastMessages = string.Join("\n \u2022 ", lastMessage.Select(x => x.Message).Reverse().Take(3).Reverse().ToArray());
             var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.TimedoutUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
 
-            await DiscordBot.SendTimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated, lastMessage, followerTime, e.TimeoutDuration, e.TimeoutReason);
+            await DiscordBot.SendTimeoutNotification(channelName, channelIcon, bannerName, bannerIcon, userName, userIcon, userCreated, lastMessages, followerTime, e.TimeoutDuration, e.TimeoutReason);
         }
     }
 
@@ -226,8 +243,9 @@ public partial class TwitchBot
             var userName = user.DisplayName;
             var userIcon = EncodeImageUrl(user.ProfileImageUrl);
             var userCreated = user.CreatedAt.AddHours(2);
+            var followerTime = (await _api.Helix.Users.GetUsersFollowsAsync(fromId: e.TargetUserId, toId: e.ChannelId)).Follows.FirstOrDefault()?.FollowedAt;
 
-            await DiscordBot.SendMessageDeletedNotification(channelName, channelIcon, deleterName, deleterIcon, userName, userIcon, userCreated, e.Message);
+            await DiscordBot.SendMessageDeletedNotification(channelName, channelIcon, deleterName, deleterIcon, userName, userIcon, userCreated, e.Message, followerTime);
         }
     }
 
@@ -317,7 +335,7 @@ public partial class TwitchBot
 
     public async Task<long> GetFollowerCount()
     {
-        var id = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { ConfigManager.Config.Twitch.Channel });
+        var id = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { ConfigManager.Config.Twitch.Channel[0] });
         return (await _api.Helix.Users.GetUsersFollowsAsync(toId: id.Users[0].Id)).TotalFollows;
     }
 

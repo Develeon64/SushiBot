@@ -1,6 +1,7 @@
 ﻿using TwitchLib.Client.Models;
 using Dietze.helper;
 using Dietze.Utils.Config;
+using Discord.Rest;
 
 namespace Dietze.Twitch;
 
@@ -10,13 +11,20 @@ public partial class TwitchBot
 
     public TwitchBot()
     {
-        _tokenTimer = new Timer(TokenTimer_Tick, null, Timeout.Infinite, 300000);
+        _tokenTimer = new Timer(TokenTimer_Tick, null, Timeout.Infinite, 30000);
         Initialize();
     }
 
     private async void TokenTimer_Tick(object? stateInfo)
     {
         await TwitchTokenCheck.CheckTokens(_api);
+
+        if (_client.JoinedChannels.Count == 0)
+        {
+            _client.Disconnect();
+            await Task.Delay(5);
+            InitializeClient();
+        }
     }
 
 
@@ -39,8 +47,11 @@ public partial class TwitchBot
         _tokenTimer.Change(30000, 300000);
         await TwitchTokenCheck.CheckTokens(_api, true);
 
-        _channel = (await _api.Helix.Users.GetUsersAsync(logins: new List<string>
-            { ConfigManager.Config.Twitch.Channel })).Users[0];
+        _channelId = new();
+        foreach(var channel in ConfigManager.Config.Twitch.Channel)
+        {
+            _channelId.Add((await _api.Helix.Users.GetUsersAsync(logins: new List<string> { channel })).Users[0].Id);
+        }
         _moderator =
             (await _api.Helix.Users.GetUsersAsync(logins: new List<string> { ConfigManager.Config.Twitch.Username }))
             .Users[0];
@@ -55,12 +66,16 @@ public partial class TwitchBot
         _client.OnConnected += Client_Connected;
         _client.OnJoinedChannel += Client_JoinedChannel;
 
+        _client.OnLeftChannel += _client_OnLeftChannel; ;
+
 
         _client.OnMessageSent += Client_MessageSent;
         _client.OnMessageReceived += Client_MessageReceived;
 
         _client.Connect();
     }
+
+
 
     private void InitializePubSub()
     {

@@ -24,7 +24,7 @@ namespace Dietze.helper
                 ConfigManager.RefreshTwitchChannelTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresIn);
             }
 
-            await ClassHelper.DiscordBot?.UpdateMemberCount()!;
+            //await ClassHelper.DiscordBot?.UpdateMemberCount()!;
         }
     }
 }

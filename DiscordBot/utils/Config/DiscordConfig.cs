@@ -23,7 +23,13 @@ public struct DiscordConfig
 
     [JsonProperty] public CountConfig? FollowerChannel { get; set; }
 
-    [JsonProperty] public ChannelConfig? ModChannel { get; set; }
+    [JsonProperty] public ChannelConfig? StevorChannel { get; set; }
+
+    [JsonProperty] public ChannelConfig? HarmiiChannel { get; set; }
+
+    [JsonProperty] public ChannelConfig? RaxChannel { get; set; }
+
+    [JsonProperty] public ChannelConfig? EryChannel { get; set; }
 
     [JsonProperty] public ChannelChatConfig? ChatChannel { get; set; }
 
